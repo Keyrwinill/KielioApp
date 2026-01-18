@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/KielioBlazorMauiApp/KielioBlazorMauiApp/KielioBlazorMauiApp.csproj
+/KielioBlazorMauiApp/KielioBlazorMauiApp.Shared/KielioBlazorMauiApp.Shared.csproj
+/KielioBlazorMauiApp/KielioBlazorMauiApp.Web/KielioBlazorMauiApp.Web.csproj
+/KielioBlazorMauiApp/KielioBlazorMauiApp.Web.Client/KielioBlazorMauiApp.Web.Client.csproj
+/KielioWebAPI/KielioWebAPI.csproj
