@@ -1,0 +1,109 @@
+﻿@*
+    Update date			Description 
+	--------------------------------
+    20260112   Response     Initial
+*@
+@model MoodSettingResponseModel
+@{
+    ViewBag.Title = "Mood Setting";
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-controller="MoodSetting"
+      asp-action="Index"
+      method="get">
+
+    <input type="hidden" name="operation" id="actionField"/>
+
+    <div>
+        <h4>Language</h4>
+        <select name="languageName"
+                class="cbLangMood"
+                onchange="setAction('LanguageSelected');this.form.submit()">
+            <option value="" selected=@(string.IsNullOrEmpty(Model.LanguageName) ? "selected" : null)>--Choose a language--</option>
+            @foreach (var languageName in Model.LanguageList)
+            {
+                <option value=@languageName selected=@(languageName == Model.LanguageName ? "selected" : null)>@languageName</option>
+            }
+        </select>
+
+        <h4>Mood</h4>
+        <select name="moodType"
+                class="cbLangMood"
+                disabled=@string.IsNullOrEmpty(Model.LanguageName)
+                onchange="setAction('MoodSelected');this.form.submit()">
+            <option value="" selected=@(string.IsNullOrEmpty(Model.MoodType) ? "selected" : null)>--Choose a mood--</option>
+            @if (!string.IsNullOrEmpty(Model.LanguageName))
+            {
+                @foreach (var moodType in Model.MoodList)
+                {
+                    <option value=@moodType selected=@(moodType == Model.MoodType ? "selected" : null)>@moodType</option>
+                }
+            }
+        </select>
+
+        <button type="submit"
+                @(Model.CanCreate ? "" : "disabled")
+                onclick="setAction('Create')">
+            Create
+        </button>
+        <button type="submit"
+                @(Model.CanUpdate ? "" : "disabled" )
+                onclick="setAction('Modify')">
+            Update
+        </button>
+        <button type="submit"
+                @(Model.CanSave ? "" : "disabled" )
+                onclick="setAction('Save')">
+            Save
+        </button>
+    </div>
+     
+
+    @if (!string.IsNullOrEmpty(Model.LanguageName))
+    {
+        <div class="settingBlock">
+            <div class="tensePerson">
+                <h4>Tense</h4>
+                @foreach (var tense in Model.TenseList)
+                {
+                    <div>
+                        <input type="checkbox"
+                               name="selectedTenseList"
+                               id="ckTense"
+                               @(tense.IsChecked ? "checked" : "")
+                               @(tense.IsDisabled ? "disabled" : "") />
+                        <label for="ckTense">@tense.Name</label>
+                    </div>
+                }
+            </div>
+            <div class="tensePerson">
+                <h4>Person</h4>
+                @foreach (var person in Model.PersonList)
+                {
+                    <div>
+                        <input type="checkbox"
+                               id="ckPerson"
+                               @(person.IsChecked ? "checked" : "")
+                               @(person.IsDisabled ? "disabled" : "") />
+                        <label for="ckPerson">@person.Name</label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</form>
+
+@functions {
+}
+
+@section Scripts {
+    <script>
+        function setAction(action)
+        {
+            document.getElementById("actionField").ariaValueMax = action;
+        }
+    </script>
+}
+

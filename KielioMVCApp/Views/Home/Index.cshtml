@@ -1,0 +1,24 @@
+﻿@using ViewModel.Models.ResponseModels
+@*
+    Update date			Description 
+	--------------------------------
+    20251115            Initial
+*@
+@model HomeResponseModel
+@{
+    ViewData["Title"] = "Kielio";
+
+    var today = DateTime.Now;
+}
+
+@functions {
+    public string FormatDate(DateTime date)
+    {
+        return date.ToString("yyyy MM dd, dddd");  //2025 8月 16, 星期六
+    }
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome, @Model.Person.FirstName @Model.Person.LastName</h1>
+    <p>Today is @FormatDate(today)</p>
+</div>

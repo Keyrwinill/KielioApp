@@ -1,0 +1,59 @@
+﻿@using ViewModel.Models.ResponseModels
+@*
+    Update date			Description 
+	--------------------------------
+    2025Response            Initial
+*@
+@model VerbResponseModel
+@{
+    var verbData = Model;
+    var language = verbData != null ? verbData.LanguageName : "";
+    ViewBag.Title = language + " Verb";
+	var infinitiveVerb = ViewBag.InfinitiveVerb as string;
+
+    var conjugations = verbData != null ? verbData.Conjugations : null;
+}
+
+<h2>@ViewBag.Title</h2>
+
+<form asp-action="Index" method="get">
+    <input class="verbInput"
+           type="text" 
+           name="Infinitive"
+           placeholder="Please enter an infinitive verb." />
+	<button type="submit" class="btn btn-primary">Search</button>
+</form>
+@if (string.IsNullOrEmpty(infinitiveVerb) || verbData == null || conjugations == null)
+{
+    <p></p>
+}
+else
+{
+    <p>
+        <h3>@verbData.Infinitive</h3>
+        @foreach (var conj in conjugations)
+        {
+            <h4>@conj.Tense</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Person</th>
+                        <th>Conjugation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (conj.PersonForms != null || conj.PersonForms.Any())
+                    {
+                        @foreach (var form in conj.PersonForms)
+                        {
+                            <tr>
+                                <td>@form.Pronoun</td>
+                                <td>@form.Form</td>
+                            </tr>
+                        }
+					}   
+                </tbody>
+            </table>
+        }
+    </p>
+}

@@ -1,0 +1,14 @@
+<Solution>
+  <Project Path="DataAccessLibrary/DataAccessLibrary.csproj" />
+  <Project Path="KielioBlazorMauiApp/KielioBlazorMauiApp.Shared/KielioBlazorMauiApp.Shared.csproj" Id="995c07d4-3ce6-4fc9-8c35-8fb39227f2b4" />
+  <Project Path="KielioBlazorMauiApp/KielioBlazorMauiApp.Web.Client/KielioBlazorMauiApp.Web.Client.csproj" Id="ce7a83a5-7327-49b5-8447-11ea256bfa45" />
+  <Project Path="KielioBlazorMauiApp/KielioBlazorMauiApp.Web/KielioBlazorMauiApp.Web.csproj" Id="cc8bd022-6e66-4b85-ba58-43b2e75f24f8" />
+  <Project Path="KielioBlazorMauiApp/KielioBlazorMauiApp/KielioBlazorMauiApp.csproj" Id="96140925-e4bc-40ba-8711-17aab3764be0">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="KielioMVCApp/KielioMVCApp.csproj" />
+  <Project Path="KielioWebAPI/KielioWebAPI.csproj" Id="ddcf9a2b-4c8e-45c6-ae24-f51cda376140" />
+  <Project Path="Script/Script.csproj" />
+  <Project Path="WebModel/ViewModel.csproj" Id="a45b5caf-3b20-46d1-bddf-a243d54eaa86" />
+  <Project Path="WebService/WebService.csproj" Id="ccbb5564-de62-44f8-8f63-797a0b762bf1" />
+</Solution>

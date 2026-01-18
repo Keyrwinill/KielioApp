@@ -1,0 +1,61 @@
+/*
+    20251115        Initial
+    20251229        Verb page
+    20260113        Mood setting page
+*/
+.sidebar {
+    min-height: 100vh;
+    width: 250px;
+    background: linear-gradient(to bottom, #4dffb8, #1affff);
+    /*padding: 1rem;*/
+}
+
+.sidebar .nav-link {
+    color: #4a5968;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid black;
+    width: 120px;
+    height: 50px;
+    padding: 8px;
+    text-align: center;
+}
+
+.adjTableCaption {
+    color: #cc33ff;
+    caption-side: top;
+    font-weight: bold;
+    font-size: 120%;
+    text-align: center;
+    padding: 8px;
+}
+
+.verbInput {
+    width: 300px;
+}
+
+/*+>>20260113*/
+.settingBlock {
+    display: flex;
+    gap: 16px;
+}
+
+.tensePerson {
+    padding: 20px;
+}
+.cbLangMood {
+    width: 300px;
+}
+/*<<20260113*/

@@ -1,0 +1,85 @@
+﻿@using ViewModel.Models.ResponseModels
+@*
+    Update date			Description 
+	--------------------------------
+    20251118            Initial
+*@
+
+@*Declare type received from controller*@
+@model List<DeutschAdjectiveResponseModel>
+
+@{
+    var adjectives = Model;
+}
+
+@functions {
+    string[] Types = { "Definite", "Indefinite", "NoArticle", "Genitiv" };
+
+    public string DefineTitle(string Type)
+    {
+        string title = Type switch
+        {
+            "Definite" => "Definite Article",
+            "Indefinite" => "Indefinite Article",
+            "NoArticle" => "No Article",
+            "Genitiv" => "Genitive",
+            _ => ""
+        };
+
+        return title;
+    }
+
+    public (string ArticleEnding, string AdjectiveEnding) GetEndings(List<DeutschAdjectiveResponseModel> AdjObjs, string Gender, string Case)
+    {
+        var result = AdjObjs
+            .Where(obj => obj.Gender == Gender
+                        && obj.Case == Case)
+            .Select(obj => (obj.ArticleEnding, obj.AdjectiveEnding))
+            .FirstOrDefault();
+
+        return result;
+    }
+}
+
+<table class="table">
+    <caption class="adjTableCaption">@DefineTitle(adjectives.First().Type)</caption>
+    <thead>
+        <tr>
+            <th></th>
+            <th>Masculine</th>
+            <th>Neuter</th>
+            <th>Feminine</th>
+            <th>Plural</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th>Nominative</th>
+            <td>@GetEndings(adjectives, "Masculine", "Nominativ").ArticleEnding @GetEndings(adjectives, "Masculine", "Nominativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Neuter", "Nominativ").ArticleEnding @GetEndings(adjectives, "Neuter", "Nominativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Feminine", "Nominativ").ArticleEnding @GetEndings(adjectives, "Feminine", "Nominativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Plural", "Nominativ").ArticleEnding @GetEndings(adjectives, "Plural", "Nominativ").AdjectiveEnding</td>
+        </tr>
+        <tr>
+            <th>Genitive</th>
+            <td>@GetEndings(adjectives, "Masculine", "Genitiv").ArticleEnding @GetEndings(adjectives, "Masculine", "Genitiv").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Neuter", "Genitiv").ArticleEnding @GetEndings(adjectives, "Neuter", "Genitiv").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Feminine", "Genitiv").ArticleEnding @GetEndings(adjectives, "Feminine", "Genitiv").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Plural", "Genitiv").ArticleEnding @GetEndings(adjectives, "Plural", "Genitiv").AdjectiveEnding</td>
+        </tr>
+        <tr>
+            <th>Dative</th>
+            <td>@GetEndings(adjectives, "Masculine", "Dativ").ArticleEnding @GetEndings(adjectives, "Masculine", "Dativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Neuter", "Dativ").ArticleEnding @GetEndings(adjectives, "Neuter", "Dativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Feminine", "Dativ").ArticleEnding @GetEndings(adjectives, "Feminine", "Dativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Plural", "Dativ").ArticleEnding @GetEndings(adjectives, "Plural", "Dativ").AdjectiveEnding</td>
+        </tr>
+        <tr>
+            <th>Accusative</th>
+            <td>@GetEndings(adjectives, "Masculine", "Akkusativ").ArticleEnding @GetEndings(adjectives, "Masculine", "Akkusativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Neuter", "Akkusativ").ArticleEnding @GetEndings(adjectives, "Neuter", "Akkusativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Feminine", "Akkusativ").ArticleEnding @GetEndings(adjectives, "Feminine", "Akkusativ").AdjectiveEnding</td>
+            <td>@GetEndings(adjectives, "Plural", "Akkusativ").ArticleEnding @GetEndings(adjectives, "Plural", "Akkusativ").AdjectiveEnding</td>
+        </tr>
+    </tbody>
+</table>

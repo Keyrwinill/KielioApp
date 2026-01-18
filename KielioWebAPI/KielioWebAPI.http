@@ -1,0 +1,6 @@
+@KielioWebAPI_HostAddress = http://localhost:5299
+
+GET {{KielioWebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

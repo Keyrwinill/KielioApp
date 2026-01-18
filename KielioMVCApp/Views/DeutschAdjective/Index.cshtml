@@ -1,0 +1,64 @@
+﻿@using ViewModel.Models.ResponseModels
+@*
+    Update date			Description 
+	--------------------------------
+    20251115            Initial
+*@
+
+@*Declare type received from coResponseller*@
+@model List<DeutschAdjectiveResponseModel>
+@{
+    ViewData["Title"] = "Deutsch Adjective";
+    string[] allTypeSort = { "Definite", "Indefinite", "NoArticle", "Genitiv" };
+    var adjectives = Model;
+    var selectedType = ViewBag.SelectedType as string;
+    IEnumerable<string> types = ViewBag.Types as IEnumerable<string>;
+}
+
+@functions {
+}
+<h2>@ViewData["Title"]</h2>
+
+<form method="get">
+    <select name="articleType"
+            onchange="this.form.submit()"
+            class="form-control">
+        <option value="" selected=@(string.IsNullOrEmpty(selectedType) ? "selected" : null)>--Choose a type--</option>
+        <option value="All" selected=@(selectedType == "All" ? "selected" : null)>All</option>
+        <option value="Definite" selected=@(selectedType == "Definite" ? "selected" : null)>Definite Article</option>
+        <option value="Indefinite" selected=@(selectedType == "Indefinite" ? "selected" : null)>Indefinite Article</option>
+        <option value="NoArticle" selected=@(selectedType == "NoArticle" ? "selected" : null)>No Article</option>
+        <option value="Genitiv" selected=@(selectedType == "Genitiv" ? "selected" : null)>Genitive</option>
+    </select>
+</form>
+
+@if (string.IsNullOrEmpty(selectedType))
+{
+    <p></p>
+}
+else if (selectedType == "All")
+{
+    @foreach (var type in allTypeSort)
+    {
+        var filtered = adjectives.Where(adj => adj.Type == type).Distinct().ToList();
+        if (filtered.Any())
+        {
+            @Html.Partial("PartialView/AdjTable", filtered)
+        }
+    }
+}
+else
+{
+    var filtered = adjectives
+        .Where(adj => adj.Type == selectedType).Distinct().ToList();
+
+    if (filtered.Any())
+    {
+        @Html.Partial("PartialView/AdjTable", filtered)
+    }
+    else
+    {
+        <p></p>
+    }
+}
+
