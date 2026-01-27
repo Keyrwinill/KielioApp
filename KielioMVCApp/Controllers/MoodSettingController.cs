@@ -2,9 +2,9 @@
 	Update date			Description 
 	--------------------------------
 	20260112			Initial
+	20260121			Update GET and POST methods
 */
 using Microsoft.AspNetCore.Mvc;
-using ViewModel.Models;
 using ViewModel.Models.RequestModels;
 using WebService.Interfaces;
 
@@ -21,33 +21,27 @@ namespace KielioMVCApp.Controllers
 
 		[HttpGet]
 		[Route("/Language/MoodSetting")]
-		public IActionResult Index(string operation, string languageName, string moodType)
+		public IActionResult Index(string? languageName, string? moodType, bool edit = false)
 		{
-			var request = new MoodSettingRequestModel()
-			{
-				LanguageName = string.IsNullOrEmpty(languageName) ? null : languageName,
-				MoodType = string.IsNullOrEmpty(moodType) ? null : moodType,
-				Operation = string.IsNullOrEmpty(operation) ? "Initial" : operation
-			};
-
-			var response = _moodSettingService.GetMoodSettingView(request);
+			//+>>20260121
+			var response = _moodSettingService.GetMood(languageName, moodType);
 			return View(response);
+			//+<<20260121
 		}
-		/*
+		
 		[HttpPost]
 		[Route("/Language/MoodSetting")]
-		public IActionResult Index(string operation = "Initial", string languageName = "", string moodType = "")
+		public async Task<IActionResult> Index(MoodSettingRequestModel request)
 		{
-			var request = new MoodSettingRequestModel()
-			{
-				LanguageName = languageName,
-				MoodType = moodType,
-				Operation = operation
-			};
+			//+>>20260121
+			await _moodSettingService.SaveMood(request);
 
-			var response = _moodSettingService.GetMoodSettingView(request);
-			return View(response);
+			return RedirectToAction(nameof(Index), new 
+				{ 
+				  languageName = request.LanguageName, 
+				  moodType = request.MoodType,
+				});
+			//+<<20260121
 		}
-		*/
 	}
 }

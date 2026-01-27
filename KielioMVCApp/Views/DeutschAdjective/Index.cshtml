@@ -6,16 +6,28 @@
 *@
 
 @*Declare type received from coResponseller*@
-@model List<DeutschAdjectiveResponseModel>
+@model List<DeutschAdjResponseViewModel>
 @{
     ViewData["Title"] = "Deutsch Adjective";
-    string[] allTypeSort = { "Definite", "Indefinite", "NoArticle", "Genitiv" };
     var adjectives = Model;
     var selectedType = ViewBag.SelectedType as string;
-    IEnumerable<string> types = ViewBag.Types as IEnumerable<string>;
+
+	var dropdownTypes = adjectives.Select(adj => adj.ArticleTypeList).Distinct().FirstOrDefault();
+    var displayTypes = dropdownTypes.Where(t => t != "" || t != "All").ToList();
 }
 
 @functions {
+    public string TransformType(string type)
+    {
+        return type switch
+        {
+            "Definite" => "Definite Article",
+            "Indefinite" => "Indefinite Article",
+            "NoArticle" => "No Article",
+            "Genitiv" => "Genitive",
+            _ => type
+        };
+	}
 }
 <h2>@ViewData["Title"]</h2>
 
@@ -23,12 +35,10 @@
     <select name="articleType"
             onchange="this.form.submit()"
             class="form-control">
-        <option value="" selected=@(string.IsNullOrEmpty(selectedType) ? "selected" : null)>--Choose a type--</option>
-        <option value="All" selected=@(selectedType == "All" ? "selected" : null)>All</option>
-        <option value="Definite" selected=@(selectedType == "Definite" ? "selected" : null)>Definite Article</option>
-        <option value="Indefinite" selected=@(selectedType == "Indefinite" ? "selected" : null)>Indefinite Article</option>
-        <option value="NoArticle" selected=@(selectedType == "NoArticle" ? "selected" : null)>No Article</option>
-        <option value="Genitiv" selected=@(selectedType == "Genitiv" ? "selected" : null)>Genitive</option>
+        @foreach (var type in dropdownTypes)
+        {
+            <option value=@type selected=@(selectedType == type ? "selected" : null)>@TransformType(type)</option>
+        }
     </select>
 </form>
 
@@ -38,7 +48,7 @@
 }
 else if (selectedType == "All")
 {
-    @foreach (var type in allTypeSort)
+    @foreach (var type in displayTypes)
     {
         var filtered = adjectives.Where(adj => adj.Type == type).Distinct().ToList();
         if (filtered.Any())

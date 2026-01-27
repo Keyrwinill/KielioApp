@@ -4,13 +4,10 @@
 	20251125			Initial
 */
 using DataAccessLibrary.Entities;
+using ViewModel.Models.ResponseModels;
 
 namespace WebService.Interfaces;
 public interface IDeutschAdjektivService
 {
-	//DeutschAdjektiv GetOne(int oid);      //for test
-	DeutschAdjektiv GetOne(Guid oid);
-	IEnumerable<DeutschAdjektiv> GetAll();
-	Task Add(DeutschAdjektiv adj);
-	Task AddRangeAsync(IEnumerable<DeutschAdjektiv> adjs);
+	List<DeutschAdjResponseViewModel> GetViewByType(string articleType);
 }

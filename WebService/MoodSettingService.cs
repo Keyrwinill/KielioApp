@@ -2,15 +2,16 @@
 	Update date			Description 
 	----------------------------------------
 	20260108			Initial
+	20260120			POST Methods
 */
 
 using DataAccessLibrary;
 using DataAccessLibrary.Dictionaries;
 using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
-using ViewModel.Enums;
 using ViewModel.Models.RequestModels;
 using ViewModel.Models.ResponseModels;
+using ViewModel.Models.Shared;
 using WebService.Interfaces;
 
 namespace WebService;
@@ -45,203 +46,165 @@ public class MoodSettingService : IMoodSettingService
 		_midMoodPerson = midMoodPerson;
 	}
 
-	public MoodSettingResponseModel GetMoodSettingView(MoodSettingRequestModel request)
-	{		
-		var languageName = request.LanguageName;
-		var moodType = request.MoodType;
-		var operation = request.Operation;
-
+	//GET
+	public MoodSettingResponseModel GetMood(string? languageName, string? moodType)
+	{
 		var languages = _language.GetAll().ToList();
-
-		//LanguageList
-		List<string> languageList = new List<string>();
-		foreach (var language in languages)
-		{
-			if (language != null)
-			{ languageList.Add(language.Name); }
-		}
-
-		
 		var moods = _mood.GetAll()
-						 .Where(m => m.Language.Name == languageName)
+						 .Where(m => m.Language?.Name == languageName)
 						 .OrderBy(m => m.SortOrder)
 						 .ToList();
+		var allTenses = _tense.GetAll().ToList();
+		var allPersons = _verbPerson.GetAll().ToList();
 
-		//MoodList
-		List<string> moodList = new List<string>();	
-		foreach (var mood in moods)
+		var selectedMood = !string.IsNullOrEmpty(moodType) 
+						   ? moods.FirstOrDefault(m => m.Type == moodType)
+						   : moods.FirstOrDefault();
+
+		var midMoodTenses = selectedMood != null
+								? _midMoodTense.GetAll()
+											   .Where(mmt => mmt.Mood == selectedMood)
+											   .ToList()
+								: [];
+
+		var midMoodPersons = selectedMood != null
+								? _midMoodPerson.GetAll()
+											   .Where(mmp => mmp.Mood == selectedMood)
+											   .ToList()
+								: [];
+
+		var response = new MoodSettingResponseModel()
 		{
-			if (mood != null)
-			{ moodList.Add(mood.Type); }
-		}
+			LanguageName = !string.IsNullOrEmpty(languageName) ? languageName : "",
 
-		var tenses = _tense.GetAll()
-						   .Where(t => t.Language.Name == languageName)
-						   .OrderBy(t => t.SortOrder)
-						   .ToList();
+			MoodType = !string.IsNullOrEmpty(moodType) ? moodType : "",
 
-		//TenseList
-		List<CheckboxViewModel> tenseList = new List<CheckboxViewModel>();
-		foreach (var tense in tenses)
-		{
-			var mood = _mood.GetAll()
-							.FirstOrDefault(m => m.Type == moodType);
-			var checkboxInfo = GetTenseList(operation, mood, tense);
-			tenseList.Add(checkboxInfo);
-		}
+			LanguageList = _language.GetAll()
+								    .Select(l => l.Name)
+								    .ToList(),
 
-		var persons = _verbPerson.GetAll()
-								 .Where(p => p.Language.Name == languageName)
-								 .OrderBy(p => p.SortOrder)
-								 .ToList();
+			MoodList = moods.OrderBy(m => m.SortOrder)
+							.Select(m => m.Type)
+							.Distinct()
+							.ToList(),
 
-		//PersonList
-		List<CheckboxViewModel> personList = new List<CheckboxViewModel>();
-		foreach (var person in persons)
-		{
-			var mood = _mood.GetAll()
-							.FirstOrDefault(m => m.Type == moodType);
-			var checkboxInfo = GetPersonList(operation, mood, person);
-			personList.Add(checkboxInfo);
-		}
+			TenseList = _tense.GetAll()
+							  .OrderBy(t => t.SortOrder)
+							  .Select(t => new CheckboxViewModel
+							  {
+								  Name = t.Name,
+								  IsChecked = midMoodTenses.Any(midMT => midMT.Tense == t) == true
+							  })
+							  .ToList(),
 
-		//Status
-		var status = operation switch
-		{
-			"Initial" => MoodSettingPageStatus.Initial.ToString(),
-			"LanguageSelected" => MoodSettingPageStatus.LanguageSelected.ToString(),
-			"MoodSelected" => MoodSettingPageStatus.View.ToString(),
-			"Create" => MoodSettingPageStatus.Create.ToString(),
-			"Modify" => MoodSettingPageStatus.Modify.ToString(),
-			"Save" => MoodSettingPageStatus.View.ToString(),
-			_ => null
+			PersonList = _verbPerson.GetAll()
+									.OrderBy(p => p.SortOrder)
+									.Select(p => new CheckboxViewModel
+									{
+										Name = PersonTypeDictionary.PersonType.ContainsKey(p.Type) 
+												? PersonTypeDictionary.PersonType[p.Type] 
+												: p.Type,
+										IsChecked = midMoodPersons.Any(midMP => midMP.VerbPerson == p) == true
+									}).ToList()
 		};
 
-		//CanCreate
-		bool canCreate = !string.IsNullOrEmpty(languageName) ? true : false;
-
-		//CanUpdate
-		bool canUpdate = (!string.IsNullOrEmpty(languageName) && !string.IsNullOrEmpty(moodType)) ? true : false;
-
-		//CanSave
-		bool canSave = (operation == "Create" || operation == "Modify") ? true : false;
-
-		MoodSettingResponseModel responseModel = new MoodSettingResponseModel()
-		{
-			LanguageName = languageName,
-			MoodType = moodType,
-			LanguageList = languageList,
-			MoodList = moodList,
-			TenseList = tenseList,
-			PersonList = personList,
-			Status = status,
-			CanCreate = canCreate,
-			CanUpdate = canUpdate,
-			CanSave = canSave,
-		};
-
-		return (responseModel);
-
-		CheckboxViewModel GetTenseList(string operation, Mood mood, Tense tense)
-		{
-			var midMoodTense = _midMoodTense.GetAll().FirstOrDefault(midMT => midMT.Mood == mood && midMT.Tense == tense);
-			string tenseName = tense.Name;
-			bool isChecked;
-
-			//IsChecked
-			if (midMoodTense != null)
-			{ isChecked = true; }
-			else 
-			{ isChecked = false; }
-
-			//IsDisabled
-			bool isDisabled;
-			string[] editableStatus = ["Create", "Modify"];
-			if (editableStatus.Contains(operation))
-			{ isDisabled = false; }
-			else
-			{ isDisabled = true; }
-
-			return new CheckboxViewModel
-			{
-				Name = tenseName,
-				IsChecked = isChecked,
-				IsDisabled = isDisabled,
-			};
-		}
-
-		CheckboxViewModel GetPersonList(string operation, Mood mood, VerbPerson person)
-		{
-			var midMoodPerson = _midMoodPerson.GetAll().FirstOrDefault(midMP => midMP.Mood == mood && midMP.VerbPerson == person);
-			string personType = person.Type;
-			PersonTypeDictionary.PersonType.TryGetValue(personType, out string personTypeDisp);
-			bool isChecked;
-
-			//IsChecked
-			if (midMoodPerson != null)
-			{ isChecked = true; }
-			else
-			{ isChecked = false; }
-
-			//IsDisabled
-			bool isDisabled;
-			string[] editableStatus = ["Create", "Modify"];
-			if (editableStatus.Contains(operation))
-			{ isDisabled = false; }
-			else
-			{ isDisabled = true; }
-
-			return new CheckboxViewModel
-			{
-				Name = personTypeDisp,
-				IsChecked = isChecked,
-				IsDisabled = isDisabled
-			};
-		}
+		return (response);
 	}
 
-	public async void SetLink(string operation, string languageName, string moodType, List<int> tenseSelectionList, List<int> personSelectionList)
+	//+>>20260120
+	//POST (rebuild response)
+	public MoodSettingResponseModel RebuildResponse(MoodSettingRequestModel request)
 	{
-		var language = _language.GetAll().FirstOrDefault(lang => lang.Name == languageName);
+		var languageName = request != null ? request.LanguageName : "";
+		var moodType = request != null ? request.MoodType : "";
+		var response = GetMood(languageName, moodType);
 
-		if (operation == "Create")
+		response.TenseList.ForEach(t => t.IsChecked = request.TenseList.Any(x => x.Name == t.Name && x.IsChecked));
+		response.PersonList.ForEach(p => p.IsChecked = request.PersonList.Any(x => x.Name == p.Name && x.IsChecked));
+
+		return response;
+	}
+
+	//POST (save)
+	public async Task SaveMood(MoodSettingRequestModel request)
+	{
+		var languageName = request != null ? request.LanguageName : "";
+		var moodType = request != null ? request.MoodType : "";
+		var tenseList = request != null ? request.TenseList : [];
+		var personList = request != null ? request.PersonList : [];
+
+		var language = _language.GetAll().FirstOrDefault(l => l.Name == languageName) ?? throw new Exception("Language not found!");
+		var mood = _mood.GetAll().FirstOrDefault(m => m?.Language?.Name == languageName && m.Type == moodType);
+
+		if (mood == null)
 		{
-			var mood = await _mood.CreateByTypeAsync(language, moodType);
-			_unitOfWork.Save();
-
-			SetMidTable(mood, tenseSelectionList, personSelectionList);
+			// Create new mood
+			mood = new Mood
+			{
+				Oid = Guid.NewGuid(),
+				Type = moodType,
+				LinkLanguage = language.Oid,
+				SortOrder = _mood.GetAll().Where(m => m.LinkLanguage == language.Oid).Count() + 1
+			};
+			await _mood.AddAsync(mood);
 		}
 		else
 		{
-			var mood = _mood.GetAll().FirstOrDefault(m => m.Type == moodType);
-			SetMidTable(mood, tenseSelectionList, personSelectionList);
+			// Modify existing mood
+			// Clear existing relations
+			var existingMidMoodTenses = _midMoodTense.GetAll().Where(t => t.Mood == mood).ToList();
+			var existTenses = existingMidMoodTenses.Select(t => t.Tense).ToList();
+			_midMoodTense.Delete(mood, existTenses);
+
+			var existingMidMoodPersons = _midMoodPerson.GetAll().Where(p => p.Mood == mood).ToList();
+			var existPersons = existingMidMoodPersons.Select(p => p.VerbPerson).ToList();
+			_midMoodPerson.Delete(mood, existPersons);
 		}
 
-		void SetMidTable(Mood mood, List<int> tenseSelectionList, List<int> personSelectionList)
+		_unitOfWork.Save();
+
+		// Add new relations
+		var selectedTenses = _tense.GetAll()
+								   .Where(t => tenseList.Any(x => x.Name == t.Name && x.IsChecked))
+								   .ToList();
+
+		foreach (var tense in selectedTenses)
 		{
-			foreach (var tenseSelection in tenseSelectionList)
+			var midMoodTense = new MidMoodTense
 			{
-				var tense = _tense.GetAll().FirstOrDefault(t => t.SortOrder == tenseSelection);
-				var midMoodTense = _midMoodTense.GetAll().FirstOrDefault(midMT => midMT.Mood == mood && midMT.Tense == tense);
-
-				if (midMoodTense == null && tense != null)
-				{					
-					_midMoodTense.SetMoodTenseAsync(mood, tense);
-				}
-				_unitOfWork.Save();
-			}
-
-			foreach (var personSelection in personSelectionList)
-			{
-				var verbPerson = _verbPerson.GetAll().FirstOrDefault(vp => vp.SortOrder == personSelection);
-				var midMoodPerson = _midMoodPerson.GetAll().FirstOrDefault(midMP => midMP.Mood == mood && midMP.VerbPerson == verbPerson);
-				
-				if (midMoodPerson == null && verbPerson != null)
-				{
-					_midMoodPerson.SetMoodPersonAsync(mood, verbPerson);
-				}
-				_unitOfWork.Save();
-			}
+				LinkMood = mood.Oid,
+				Mood = mood,
+				MoodType = mood.Type,
+				LinkTense = tense.Oid,
+				Tense = tense,
+				TenseName = tense.Name
+			};
+			await _midMoodTense.AddAsync(midMoodTense);
 		}
+
+		var personCode = PersonTypeDictionary.PersonType.ToDictionary(x => x.Value, x => x.Key);
+		var selectedPersonCodes = personList.Where(x => x.IsChecked)
+											.Select(x => personCode[x.Name])
+											.ToHashSet();
+		var selectedPersons = _verbPerson.GetAll()
+										 .Where(p => selectedPersonCodes.Contains(p.Type))
+										 .ToList();
+
+		foreach (var person in selectedPersons)
+		{
+			var midMoodPerson = new MidMoodPerson
+			{
+				LinkMood = mood.Oid,
+				Mood = mood,
+				MoodType = mood.Type,
+				LinkVerbPerson = person.Oid,
+				VerbPerson = person,
+				PersonType = person.Type
+			};
+			await _midMoodPerson.AddAsync(midMoodPerson);
+		}
+
+		_unitOfWork.Save();
 	}
+	//+<<20260120
 }

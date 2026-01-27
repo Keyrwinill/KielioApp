@@ -12,7 +12,6 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/KielioApp.styles.css" asp-append-version="true" />
 </head>
 <body>
     <div class="d-flex">
@@ -49,13 +48,29 @@
                                 <div class="collapse" id="collapseDeutsch">
                                     <ul class="nav flex-column ms-3">
                                         <li class="nav-item">
-                                            <a class="nav-link" href="/Language/Deutsch/Verb">Deutsch Verb</a>
+                                            <a class="nav-link" href="/Language/Deutsch/Conjugation">Deutsch Verb</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link" href="/Language/Deutsch/Adjective">Deutsch Adjective</a>
                                         </li>
 									</ul>
 								</div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link"
+                                   data-bs-toggle="collapse"
+                                   data-bs-target="#collapseFrançais"
+                                   aria-expanded="false" ,
+                                   aria-controls="collapseFrançais">
+                                    Français
+                                </a>
+                                <div class="collapse" id="collapseFrançais">
+                                    <ul class="nav flex-column ms-3">
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="/Language/Deutsch/Verb">Français Verb</a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </li>
                         </ul>
                     </div>

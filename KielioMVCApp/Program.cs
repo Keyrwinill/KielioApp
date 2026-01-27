@@ -31,7 +31,7 @@ builder.Services.AddScoped<IVerbPersonRepository, VerbPersonRepository>();
 builder.Services.AddScoped<IConjugationRepository, ConjugationRepository>();
 builder.Services.AddScoped<IMoodRepository, MoodRepository>();
 
-builder.Services.AddScoped<IVerbService, VerbService>();
+builder.Services.AddScoped<IConjugationService, ConjugationService>();
 //+<<20251223
 //+>>20260112
 builder.Services.AddScoped<IUnitofWork, UnitOfWork>();

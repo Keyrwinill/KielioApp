@@ -6,7 +6,7 @@
 *@
 
 @*Declare type received from controller*@
-@model List<DeutschAdjectiveResponseModel>
+@model List<DeutschAdjResponseViewModel>
 
 @{
     var adjectives = Model;
@@ -29,7 +29,7 @@
         return title;
     }
 
-    public (string ArticleEnding, string AdjectiveEnding) GetEndings(List<DeutschAdjectiveResponseModel> AdjObjs, string Gender, string Case)
+    public (string ArticleEnding, string AdjectiveEnding) GetEndings(List<DeutschAdjResponseViewModel> AdjObjs, string Gender, string Case)
     {
         var result = AdjObjs
             .Where(obj => obj.Gender == Gender
@@ -42,7 +42,7 @@
 }
 
 <table class="table">
-    <caption class="adjTableCaption">@DefineTitle(adjectives.First().Type)</caption>
+    <caption class="adjTableCaption">@DefineTitle(adjectives.FirstOrDefault().Type)</caption>
     <thead>
         <tr>
             <th></th>

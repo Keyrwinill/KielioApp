@@ -4,6 +4,8 @@ using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Script;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 static class Program
 {
@@ -23,14 +25,26 @@ static class Program
 		var verbPersonRepo = scope.ServiceProvider.GetRequiredService<IVerbPersonRepository>();
 		var midMoodTenseRepo = scope.ServiceProvider.GetRequiredService<IMidMoodTenseRepository>();
 		var midMoodPersonRepo = scope.ServiceProvider.GetRequiredService<IMidMoodPersonRepository>();
+		var verbRepo = scope.ServiceProvider.GetRequiredService<IVerbRepository>();
+		var conjugationRepo = scope.ServiceProvider.GetRequiredService<IConjugationRepository>();
 
 		var language = languageRepo.GetAll().FirstOrDefault(lang => lang.Name == "German");
-		var tenses = tenseRepo.GetAll().Where(t => t.Language == language).ToList();
-		var verbPersons = verbPersonRepo.GetAll().Where(t => t.Language == language).ToList();
+		//var tenses = tenseRepo.GetAll().Where(t => t.Language == language).ToList();
+		//var verbPersons = verbPersonRepo.GetAll().Where(vb => vb.Language == language && vb.Type != "2f").ToList();
+		
+		//var mood = moodRepo.GetAll().FirstOrDefault(m => m.Type == "Indikativ" && m.Language == language);
+		
+		var conjugations = conjugationRepo.GetAll()
+										  .ToList();
 
-		var personTypeDict = new PersonTypeDictionary();
-		var personTypeDisp = personTypeDict.PersonType["1s"];
-		Console.WriteLine(personTypeDisp);
+		var midMoodTenses = conjugations.Select(conj => conj.MidMoodTense).ToList();
+		var midMoodPersons = conjugations.Select(conj => conj.MidMoodPerson).ToList();
+
+		foreach (var midMoodTense in midMoodTenses)
+		{
+			Console.WriteLine($"MoodType: ${midMoodTense.MoodType}");
+		}
+
 
 		// for saving DB
 		//uow.Save();

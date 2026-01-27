@@ -2,6 +2,7 @@
 	Update date			Description 
 	--------------------------------------------------------------------------
     20251225			Add DeutschAdjektivService VerbService, Db connection
+	20260122            Add MoodSettingService
 */
 using DataAccessLibrary;
 using DataAccessLibrary.Interfaces;
@@ -31,7 +32,15 @@ builder.Services.AddScoped<IVerbPersonRepository, VerbPersonRepository>();
 builder.Services.AddScoped<IConjugationRepository, ConjugationRepository>();
 builder.Services.AddScoped<IMoodRepository, MoodRepository>();
 
-builder.Services.AddScoped<IVerbService, VerbService>();
+builder.Services.AddScoped<IConjugationService, ConjugationService>();
+
+//+>>20260122
+builder.Services.AddScoped<IUnitofWork, UnitOfWork>();
+builder.Services.AddScoped<IMidMoodTenseRepository, MidMoodTenseRepository>();
+builder.Services.AddScoped<IMidMoodPersonRepository, MidMoodPersonRepository>();
+
+builder.Services.AddScoped<IMoodSettingService, MoodSettingService>();
+//+<<20260122
 
 // Add DB connection
 builder.Services.AddDbContext<KieliodbContext>(options =>

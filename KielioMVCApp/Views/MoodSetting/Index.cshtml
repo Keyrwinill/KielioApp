@@ -6,88 +6,120 @@
 @model MoodSettingResponseModel
 @{
     ViewBag.Title = "Mood Setting";
+
+    bool hasLanguage = !string.IsNullOrEmpty(Model.LanguageName);
+    bool hasMood = !string.IsNullOrEmpty(Model.MoodType);
 }
 
 <h2>@ViewBag.Title</h2>
 
-<form asp-controller="MoodSetting"
+<hr />
+
+<form id="moodForm"
       asp-action="Index"
       method="get">
 
-    <input type="hidden" name="operation" id="actionField"/>
+    <input type="hidden"
+           id="languageName"
+           name="LanguageName"
+		   value="@Model.LanguageName" />
 
+    <input type="hidden"
+		   name="MoodType"
+           id="moodType"
+           value="@Model.MoodType" />
+    
     <div>
-        <h4>Language</h4>
-        <select name="languageName"
-                class="cbLangMood"
-                onchange="setAction('LanguageSelected');this.form.submit()">
+        <!--Language-->
+        <label>Language</label>
+        <select id="cbLanguage"
+				name="LanguageName">
+                <!--onchange="this.form.submit()"-->
             <option value="" selected=@(string.IsNullOrEmpty(Model.LanguageName) ? "selected" : null)>--Choose a language--</option>
             @foreach (var languageName in Model.LanguageList)
             {
                 <option value=@languageName selected=@(languageName == Model.LanguageName ? "selected" : null)>@languageName</option>
             }
         </select>
-
-        <h4>Mood</h4>
-        <select name="moodType"
-                class="cbLangMood"
-                disabled=@string.IsNullOrEmpty(Model.LanguageName)
-                onchange="setAction('MoodSelected');this.form.submit()">
+        
+        <!--Mood-->
+        <label>Mood</label>
+        <select id="cbMood"
+                name="MoodType"
+                <!--onchange="this.form.submit()"-->
+                disabled="@(!hasLanguage)">
             <option value="" selected=@(string.IsNullOrEmpty(Model.MoodType) ? "selected" : null)>--Choose a mood--</option>
-            @if (!string.IsNullOrEmpty(Model.LanguageName))
+            @foreach (var moodType in Model.MoodList)
             {
-                @foreach (var moodType in Model.MoodList)
-                {
-                    <option value=@moodType selected=@(moodType == Model.MoodType ? "selected" : null)>@moodType</option>
-                }
+                <option value=@moodType selected=@(moodType == Model.MoodType ? "selected" : null)>@moodType</option>
             }
         </select>
 
-        <button type="submit"
-                @(Model.CanCreate ? "" : "disabled")
-                onclick="setAction('Create')">
+		<!--Buttons-->
+        <button type="button"
+                id="btnCreate"
+                onclick="createMood()"
+                disabled="@(!hasLanguage)">
             Create
         </button>
-        <button type="submit"
-                @(Model.CanUpdate ? "" : "disabled" )
-                onclick="setAction('Modify')">
+        <button type="button"
+                id="btnModify"
+                onclick="editMood()"
+                disabled="@(!hasMood)">
             Update
         </button>
         <button type="submit"
-                @(Model.CanSave ? "" : "disabled" )
-                onclick="setAction('Save')">
+                id="btnSave"
+                disabled>
             Save
         </button>
     </div>
      
+    <hr />
 
     @if (!string.IsNullOrEmpty(Model.LanguageName))
-    {
+    {     
         <div class="settingBlock">
+            <!--Tense-->
             <div class="tensePerson">
                 <h4>Tense</h4>
-                @foreach (var tense in Model.TenseList)
+                @for (int i = 0; i < Model.TenseList.Count; i++)
                 {
                     <div>
+                        <input type="hidden" 
+                               name="TenseList[@i].Name"
+                               value="@Model.TenseList[i].Name" />
+                    
                         <input type="checkbox"
-                               name="selectedTenseList"
-                               id="ckTense"
-                               @(tense.IsChecked ? "checked" : "")
-                               @(tense.IsDisabled ? "disabled" : "") />
-                        <label for="ckTense">@tense.Name</label>
+                               class="editable"
+                               name="TenseList[@i].IsChecked"
+                               value="true"
+                               id="ckTense_@Model.TenseList[i].Name"
+                               @(Model.TenseList[i].IsChecked ? "checked" : "") 
+                               disabled />
+                        <label for="ckTense_@Model.TenseList[i].Name">@Model.TenseList[i].Name</label>
                     </div>
                 }
             </div>
+
+            <!--Person-->
             <div class="tensePerson">
                 <h4>Person</h4>
-                @foreach (var person in Model.PersonList)
+                @for (int i = 0; i < Model.PersonList.Count; i++)
                 {
+                    <input type="hidden"
+                           name="PersonList[@i].Name"
+                           value="@Model.PersonList[i].Name" />
+                    
                     <div>
                         <input type="checkbox"
-                               id="ckPerson"
-                               @(person.IsChecked ? "checked" : "")
-                               @(person.IsDisabled ? "disabled" : "") />
-                        <label for="ckPerson">@person.Name</label>
+                               class="editable"
+                               name="PersonList[@i].Name"
+                               value="true"
+                               id="ckPerson_@Model.PersonList[i].Name"
+                               @(Model.PersonList[i].IsChecked ? "checked" : "") 
+                               disabled />
+                        <label for="ckPerson_@Model.PersonList[i].Name">@Model.PersonList[i].Name</label>
                     </div>
                 }
             </div>
@@ -100,10 +132,22 @@
 
 @section Scripts {
     <script>
-        function setAction(action)
+        function editMood()
         {
-            document.getElementById("actionField").ariaValueMax = action;
-        }
+            document.getElementById("btnSave").disabled = false;
+
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+		}
+
+        function createMood()
+        {
+            const language = '@(Model.LanguageName ?? "")';
+            const newMood = prompt("Please enter new mood:");
+            if (!language || !mood) return;
+            const moodInput = document.querySelector('select[name="MoodType"]');
+            moodInput.value = newMood;
+            enbleEdit();
+		}
     </script>
 }
 

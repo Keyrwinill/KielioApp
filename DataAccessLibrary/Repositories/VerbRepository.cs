@@ -3,8 +3,10 @@
 	--------------------------------------------------------------------------------
 	20251125			Initial
 	20260104			Modify structure
-	20260108			Create methods for Mood, MidMoodTEnse, MidMoodPErson
+	20260108			Create methods for Mood, MidMoodTEnse, MidMoodPerson
 	20260109			Create methods for Verb, VerbPerson, Conjugation, Tense
+	20260120			Create create and delete methods for Mood, MidMoodTEnse, MidMoodPerson
+	20260126			Create Delete method for Conjugation and Verb
 */
 using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
@@ -41,6 +43,16 @@ public class VerbRepository : IVerbRepository
 		await _context.Verbs.AddRangeAsync(verbs);
 	}
 	//+<<20260109
+	//+>>20260126
+	public void RemoveConjugation(Verb verb)
+	{
+		var conjugations = _context.Conjugations.Where(c => c.Verb == verb).ToList();
+		foreach (var conj in conjugations)
+		{
+			_context.Conjugations.Remove(conj);
+		}
+	}
+	//+<<20260126
 }
 
 public class TenseRepository : ITenseRepository
@@ -116,7 +128,7 @@ public class ConjugationRepository : IConjugationRepository
 	{
 		return _context.Conjugations.FirstOrDefault(conj => conj.Oid == oid);
 	}
-	public IEnumerable<Conjugation> GetAll()
+	public IQueryable<Conjugation> GetAll()
 	{
 		return _context.Conjugations;
 	}
@@ -130,6 +142,15 @@ public class ConjugationRepository : IConjugationRepository
 		await _context.Conjugations.AddRangeAsync(conjugations);
 	}
 	//+<<20260109
+	//+>>20260126
+	public void Delete(Conjugation conjugation)
+	{
+		if (conjugation == null)
+			return;
+
+		_context.Conjugations.Remove(conjugation);
+	}
+	//+<<20260126
 }
 
 //+>20260104
@@ -159,22 +180,30 @@ public class MoodRepository : IMoodRepository
 	{
 		await _context.Moods.AddRangeAsync(moods);
 	}
+	//+<<20260108
 
-	public async Task<Mood> CreateByTypeAsync(Language language, string type)
+	//+>>20260120
+	public async Task CreateMoodAsync(Language language, string moodType, List<Tense> selectedTenses, List<VerbPerson> selectedPersons)
 	{
-
 		var mood = new Mood()
 		{
 			LinkLanguage = language.Oid,
 			Language = language,
-			Type = type
+			Type = moodType
 		};
 
 		await AddAsync(mood);
-
-		return mood;
 	}
-	//+<<20260108
+	public void Delete(string languageName, string moodType)
+	{
+		var moods = _context.Moods.Where(m => m.Language.Name == languageName && m.Type == moodType).ToList();
+
+		if (!moods.Any())
+			return;
+
+		_context.Moods.RemoveRange(moods);
+	}
+	//+<<20260120
 }
 
 public class MidMoodTenseRepository : IMidMoodTenseRepository
@@ -202,24 +231,38 @@ public class MidMoodTenseRepository : IMidMoodTenseRepository
 	{
 		await _context.MidMoodTenses.AddRangeAsync(midMoodTenses);
 	}
-	public async Task<MidMoodTense> SetMoodTenseAsync(Mood mood, Tense tense)
-	{
-		var moodType = mood.Type;
-		var tenseName = tense.Name;
-		var midMoodTense = new MidMoodTense()
-		{
-			MoodType = moodType,
-			TenseName = tenseName,
-			LinkMood = mood.Oid,
-			Mood = mood,
-			LinkTense = tense.Oid,
-			Tense = tense
-		};
-
-		await AddAsync(midMoodTense);
-		return midMoodTense;
-	}
 	//+<<20260108
+	//+>>20260120
+	public async Task CreateMidMoodTenseAsync(Mood mood, List<Tense> selectedTenses)
+	{
+		foreach (var tense in selectedTenses)
+		{
+			var midMoodTense = new MidMoodTense()
+			{
+				MoodType = mood.Type,
+				TenseName = tense.Name,
+				LinkMood = mood.Oid,
+				Mood = mood,
+				LinkTense = tense.Oid,
+				Tense = tense
+			};
+			await AddAsync(midMoodTense);
+		}
+	}
+
+	public void Delete(Mood mood, List<Tense?> unselectedTenses)
+	{
+		var midmoodTenses = _context.MidMoodTenses.Where(midMT => midMT.Mood == mood && unselectedTenses.Contains(midMT.Tense)).ToList();
+
+		if (!midmoodTenses.Any())
+			return;
+
+		foreach (var midmoodTense in midmoodTenses)
+		{
+			_context.MidMoodTenses.RemoveRange(midmoodTense);
+		}
+	}
+	//+<<20260120
 }
 
 public class MidMoodPersonRepository : IMidMoodPersonRepository
@@ -247,23 +290,37 @@ public class MidMoodPersonRepository : IMidMoodPersonRepository
 	{
 		await _context.MidMoodPersons.AddRangeAsync(midMoodPersons);
 	}
-	public async Task<MidMoodPerson> SetMoodPersonAsync(Mood mood, VerbPerson verbPerson)
-	{
-		var moodType = mood.Type;
-		var personType = verbPerson.Type;
-		var midMoodPerson = new MidMoodPerson()
-		{
-			MoodType = moodType,
-			PersonType = personType,
-			LinkMood = mood.Oid,
-			Mood = mood,
-			LinkVerbPerson = verbPerson.Oid,
-			VerbPerson = verbPerson
-		};
-
-		await AddAsync(midMoodPerson);
-		return midMoodPerson;
-	}
 	//+<<20260108
+	//+>>20260120
+	public async Task CreateMidMoodPersonAsync(Mood mood, List<VerbPerson> selectedPersons)
+	{
+		foreach (var person in selectedPersons)
+		{
+			var midMoodTense = new MidMoodPerson()
+			{
+				MoodType = mood.Type,
+				PersonType = person.Type,
+				LinkMood = mood.Oid,
+				Mood = mood,
+				LinkVerbPerson = person.Oid,
+				VerbPerson = person
+			};
+			await AddAsync(midMoodTense);
+		}
+	}
+
+	public void Delete(Mood mood, List<VerbPerson?> unselectedPersons)
+	{
+		var midmoodPersons = _context.MidMoodPersons.Where(midMP => midMP.Mood == mood && unselectedPersons.Contains(midMP.VerbPerson)).ToList();
+
+		if (!midmoodPersons.Any())
+			return;
+
+		foreach (var midmoodPerson in midmoodPersons)
+		{
+			_context.MidMoodPersons.RemoveRange(midmoodPerson);
+		}
+	}
+	//+<<20260120
 }
 //+<<20260104
