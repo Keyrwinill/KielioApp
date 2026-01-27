@@ -366,3 +366,6 @@ FodyWeavers.xsd
 /KielioBlazorMauiApp/KielioBlazorMauiApp.Web/KielioBlazorMauiApp.Web.csproj
 /KielioBlazorMauiApp/KielioBlazorMauiApp.Web.Client/KielioBlazorMauiApp.Web.Client.csproj
 /KielioWebAPI/KielioWebAPI.csproj
+/UnitTest/UnitTest.csproj
+/UnitTest
+/Script/Script.csproj
