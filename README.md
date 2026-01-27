@@ -24,13 +24,22 @@ In every language, verb forms are changing based on moods, tenses, and, persons.
 
 ### 2. ASP .NET core Web API
 #### 2.1. Deutsch Adjective
-API that correspond to 1.1, that can be called by other frontend App.
+API that correspond to 1.1, that can be called by other frontend App. (get only)
+![Deutsch Adjective Suffix get API](Screenshots/API_DeutschAdjectiveSuffix_get_20260127.png "Deutsch Adjective Suffix get API")
 
 #### 2.2. Mood Setting
 API that correspond to 1.2, that can be called by other frontend App.
+##### Get
+![Mood Setting get API](Screenshots/API_get_MoodSetting_20260123.png "Mood Setting get API")
+##### Post
+![Mood Setting post API](Screenshots/API_post_MoodSetting_20260123.png "Mood Setting post API")
 
 #### 2.3. Deutsch Conjugation
 API that shows, creates, and modifies German verb conjugations, in order to learn verbs.
+##### Get
+![Deutsch Conjugation get API](Screenshots/API_get_Conjugation_20260126.png "Deutsch Conjugation get API")
+##### Post
+![Deutsch Conjugation post API](Screenshots/API_post_Conjugation_20260126.png "Deutsch Conjugation post API")
 
    
 ## Upcoming Changes
