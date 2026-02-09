@@ -9,6 +9,29 @@
 * SQL Server
 * ASP .NET core Web API
 
+## Archtecture Design
+* Controller - Handles HTTP requests and responses
+* Service - Contains business logic and workflow control
+* Repository - Encapsulates data access and ORM operations
+* Entity - Defines domain models and database structure
+
+## Project Structure
+Column A - First layer  
+Column B - Second layer  
+Column C - Third layer  
+Purple -> Folders  
+Green -> Files  
+![Project Structure](Screenshots/Structure_20260209.png "Project Structure")
+
+## Database Design
+* EF Core Code First approach
+* Table relationships and indexes are defined in the model configuration
+* Each Entity maps directly to a database table
+![DB Structure](Screenshots/DBStructure.jpeg "DBStructure")
+
+## Request Flow Example
+HTTP Request -> Controller -> Service -> Repository -> DbContext
+
 ## Using The App
 ### 1. ASP .NET core MVC
 #### 1.1. Deutsch Adjective
@@ -25,22 +48,9 @@ In every language, verb forms are changing based on moods, tenses, and, persons.
 ### 2. ASP .NET core Web API
 #### 2.1. Deutsch Adjective
 API that correspond to 1.1, that can be called by other frontend App. (get only)
-![Deutsch Adjective Suffix get API](Screenshots/API_DeutschAdjectiveSuffix_get_20260127.png "Deutsch Adjective Suffix get API")
 
 #### 2.2. Mood Setting
 API that correspond to 1.2, that can be called by other frontend App.
-##### Get
-![Mood Setting get API](Screenshots/API_get_MoodSetting_20260123.png "Mood Setting get API")
-##### Post
-![Mood Setting post API](Screenshots/API_post_MoodSetting_20260123.png "Mood Setting post API")
-
-#### 2.3. Deutsch Conjugation
-API that shows, creates, and modifies German verb conjugations, in order to learn verbs.
-##### Get
-![Deutsch Conjugation get API](Screenshots/API_get_Conjugation_20260126.png "Deutsch Conjugation get API")
-##### Post
-![Deutsch Conjugation post API](Screenshots/API_post_Conjugation_20260126.png "Deutsch Conjugation post API")
-
    
 ## Upcoming Changes
 * Mood Setting: Add Create, Modify
