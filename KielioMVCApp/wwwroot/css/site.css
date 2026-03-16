@@ -1,61 +1,51 @@
 /*
     20251115        Initial
-    20251229        Verb page
-    20260113        Mood setting page
 */
 .sidebar {
-    min-height: 100vh;
+    top: 0;
+    left: 0;
     width: 250px;
-    background: linear-gradient(to bottom, #4dffb8, #1affff);
-    /*padding: 1rem;*/
-}
-
-.sidebar .nav-link {
+    height: 100vh;
     color: #4a5968;
-}
-
-.sidebar .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-.table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.table th,
-.table td {
-    border: 1px solid black;
-    width: 120px;
-    height: 50px;
-    padding: 8px;
-    text-align: center;
-}
-
-.adjTableCaption {
-    color: #cc33ff;
-    caption-side: top;
-    font-weight: bold;
-    font-size: 120%;
-    text-align: center;
-    padding: 8px;
-}
-
-.verbInput {
-    width: 300px;
-}
-
-/*+>>20260113*/
-.settingBlock {
+    background: linear-gradient(to bottom, #4dffb8, #1affff);
+    overflow-y: auto;
     display: flex;
-    gap: 16px;
+    flex-direction: column;
 }
 
-.tensePerson {
-    padding: 20px;
+.top-row {
+    height: 60px;
+    background-color: rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    padding-left: 1rem;
 }
-.cbLangMood {
-    width: 300px;
+
+.nav-scrollable {
+    flex-grow: 1;
+    padding-top: 1rem;
 }
-/*<<20260113*/
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #ff00ff;
+    /* #ffd700 */
+}
+
+.nav-link {
+    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    padding-left: 1.3rem;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-left: 4px solid #4a5968;
+    font-weight: 600;
+}

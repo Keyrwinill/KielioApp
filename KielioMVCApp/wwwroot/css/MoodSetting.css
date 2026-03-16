@@ -1,0 +1,26 @@
+﻿/*
+    20260303        Initial
+*/
+
+#labelLanguage, #labelMood {
+    width: 100px;
+    height: 40px;
+}
+
+.buttonSet {
+    width: 100px;
+    height: 30px;
+}
+
+#cbLanguage, #cbMood {
+    width: 200px;
+}
+
+.settingBlock {
+    display: flex;
+    gap: 20px;
+}
+
+.tensePerson {
+    padding: 20px;
+}

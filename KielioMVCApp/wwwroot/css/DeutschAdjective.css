@@ -1,0 +1,29 @@
+﻿/*
+    20251115        Initial
+*/
+.selectionType {
+    width: 
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid black;
+    width: 120px;
+    height: 50px;
+    padding: 8px;
+    text-align: center;
+}
+
+.adjTableCaption {
+    color: #cc33ff;
+    caption-side: top;
+    font-weight: bold;
+    font-size: 120%;
+    text-align: center;
+    padding: 8px;
+}

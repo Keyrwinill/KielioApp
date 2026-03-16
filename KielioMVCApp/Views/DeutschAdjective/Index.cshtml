@@ -16,6 +16,10 @@
     var displayTypes = dropdownTypes.Where(t => t != "" || t != "All").ToList();
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/DeutschAdjective.css" />
+}
+
 @functions {
     public string TransformType(string type)
     {
@@ -31,15 +35,24 @@
 }
 <h2>@ViewData["Title"]</h2>
 
+<hr />
+
 <form method="get">
-    <select name="articleType"
-            onchange="this.form.submit()"
-            class="form-control">
-        @foreach (var type in dropdownTypes)
-        {
-            <option value=@type selected=@(selectedType == type ? "selected" : null)>@TransformType(type)</option>
-        }
-    </select>
+    <div class="row">
+        <label for="cbType" class="col-md-2 col-form-label fs-5">Type</label>
+        <div class="col-md-4">            
+            <select id="cbType"
+                    name="articleType"
+					onchange="this.form.submit()"
+					class="form-select">
+				@foreach (var type in dropdownTypes)
+				{
+					<option value=@type selected=@(selectedType == type ? "selected" : null)>@TransformType(type)</option>
+				}
+			</select>
+        </div>
+    </div>
+    
 </form>
 
 @if (string.IsNullOrEmpty(selectedType))

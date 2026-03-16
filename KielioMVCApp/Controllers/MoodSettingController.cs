@@ -21,7 +21,7 @@ namespace KielioMVCApp.Controllers
 
 		[HttpGet]
 		[Route("/Language/MoodSetting")]
-		public IActionResult Index(string? languageName, string? moodType, bool edit = false)
+		public IActionResult Index(string? languageName, string? moodType)
 		{
 			//+>>20260121
 			var response = _moodSettingService.GetMood(languageName, moodType);
@@ -36,11 +36,15 @@ namespace KielioMVCApp.Controllers
 			//+>>20260121
 			await _moodSettingService.SaveMood(request);
 
+			// keep selection
+			/*
 			return RedirectToAction(nameof(Index), new 
 				{ 
 				  languageName = request.LanguageName, 
 				  moodType = request.MoodType,
 				});
+			*/
+			return RedirectToAction(nameof(Index));     // Redirect to GET method without parameters to reset the form
 			//+<<20260121
 		}
 	}

@@ -1,75 +1,77 @@
 ﻿@*
     Update date			Description 
 	--------------------------------
-    20260112   Response     Initial
+    20260112            Initial
+    20260302            Create/Modify
 *@
 @model MoodSettingResponseModel
 @{
     ViewBag.Title = "Mood Setting";
-
-    bool hasLanguage = !string.IsNullOrEmpty(Model.LanguageName);
-    bool hasMood = !string.IsNullOrEmpty(Model.MoodType);
 }
 
 <h2>@ViewBag.Title</h2>
 
 <hr />
 
-<form id="moodForm"
+<form id="filterForm"
       asp-action="Index"
       method="get">
-
-    <input type="hidden"
-           id="languageName"
-           name="LanguageName"
-		   value="@Model.LanguageName" />
-
-    <input type="hidden"
-		   name="MoodType"
-           id="moodType"
-           value="@Model.MoodType" />
     
     <div>
         <!--Language-->
-        <label>Language</label>
+        <label id="labelLanguage">Language</label>
         <select id="cbLanguage"
-				name="LanguageName">
-                <!--onchange="this.form.submit()"-->
-            <option value="" selected=@(string.IsNullOrEmpty(Model.LanguageName) ? "selected" : null)>--Choose a language--</option>
+				name="languageName">
+                <option value="" selected=@(string.IsNullOrEmpty(Model.LanguageName) ? "selected" : null)>--Choose a language--</option>
             @foreach (var languageName in Model.LanguageList)
             {
                 <option value=@languageName selected=@(languageName == Model.LanguageName ? "selected" : null)>@languageName</option>
             }
         </select>
-        
+        <br />
         <!--Mood-->
-        <label>Mood</label>
+        <label id="labelMood">Mood</label>
         <select id="cbMood"
-                name="MoodType"
-                <!--onchange="this.form.submit()"-->
-                disabled="@(!hasLanguage)">
-            <option value="" selected=@(string.IsNullOrEmpty(Model.MoodType) ? "selected" : null)>--Choose a mood--</option>
+                name="moodType"
+                disabled="@(string.IsNullOrEmpty(Model.LanguageName))">
+                <option value="" selected=@(string.IsNullOrEmpty(Model.MoodType) ? "selected" : null)>--Choose a mood--</option>
             @foreach (var moodType in Model.MoodList)
             {
                 <option value=@moodType selected=@(moodType == Model.MoodType ? "selected" : null)>@moodType</option>
             }
         </select>
+    </div>
+</form>
+<form id="postForm"
+      asp-action="Index"
+      method="post">
 
+      <input type="hidden" id="hiddenLanguage" name="LanguageName" />
+      <input type="hidden" id="hiddenMood" name="MoodType" />
+
+      <div class="buttonBlock">
 		<!--Buttons-->
         <button type="button"
+                class="buttonSet"
                 id="btnCreate"
-                onclick="createMood()"
-                disabled="@(!hasLanguage)">
+                name="action"
+                value="create"
+                disabled="@(string.IsNullOrEmpty(Model.LanguageName))">
             Create
         </button>
         <button type="button"
+                class="buttonSet"
                 id="btnModify"
-                onclick="editMood()"
-                disabled="@(!hasMood)">
+			    name="action"
+                value="modify"
+                disabled="@(string.IsNullOrEmpty(Model.LanguageName) || string.IsNullOrEmpty(Model.MoodType))">
             Update
         </button>
         <button type="submit"
+                class="buttonSet"
                 id="btnSave"
+                name="action"
+			    value="save"
                 disabled>
             Save
         </button>
@@ -85,18 +87,19 @@
                 <h4>Tense</h4>
                 @for (int i = 0; i < Model.TenseList.Count; i++)
                 {
-                    <div>
-                        <input type="hidden" 
-                               name="TenseList[@i].Name"
-                               value="@Model.TenseList[i].Name" />
-                    
+                    <div>          
+                        <!-- Hidden field for Name -->
+                        <input type="hidden" name="TenseList[@i].Name" value="@Model.TenseList[i].Name" />
+
+                        <!-- Hidden field for unchecked -->
+                        <input type="hidden" name="TenseList[@i].IsChecked" value="false" />
+
                         <input type="checkbox"
                                class="editable"
                                name="TenseList[@i].IsChecked"
-                               value="true"
+                               data-index="@i"
                                id="ckTense_@Model.TenseList[i].Name"
-                               @(Model.TenseList[i].IsChecked ? "checked" : "") 
-                               disabled />
+                               @(Model.TenseList[i].IsChecked ? "checked" : "") />
                         <label for="ckTense_@Model.TenseList[i].Name">@Model.TenseList[i].Name</label>
                     </div>
                 }
@@ -107,18 +110,19 @@
                 <h4>Person</h4>
                 @for (int i = 0; i < Model.PersonList.Count; i++)
                 {
-                    <input type="hidden"
-                           name="PersonList[@i].Name"
-                           value="@Model.PersonList[i].Name" />
-                    
                     <div>
+                        <!-- Hidden field for Name -->
+                        <input type="hidden" name="PersonList[@i].Name" value="@Model.PersonList[i].Name" />
+
+                        <!-- Hidden field for unchecked -->
+                        <input type="hidden" name="PersonList[@i].IsChecked" value="false" />
+
                         <input type="checkbox"
                                class="editable"
-                               name="PersonList[@i].Name"
-                               value="true"
+                               name="PersonList[@i].IsChecked"
+                               data-index="@i"
                                id="ckPerson_@Model.PersonList[i].Name"
-                               @(Model.PersonList[i].IsChecked ? "checked" : "") 
-                               disabled />
+                               @(Model.PersonList[i].IsChecked ? "checked" : "") />
                         <label for="ckPerson_@Model.PersonList[i].Name">@Model.PersonList[i].Name</label>
                     </div>
                 }
@@ -127,27 +131,127 @@
     }
 </form>
 
-@functions {
+@section Styles {
+    <link rel="stylesheet" href="~/css/MoodSetting.css" />
 }
 
 @section Scripts {
-    <script>
-        function editMood()
-        {
-            document.getElementById("btnSave").disabled = false;
+    <script>       
+        const filterForm = document.getElementById("filterForm");
+        const postForm = document.getElementById("postForm");
+        const settingForm = document.getElementById("settingForm");
+        const cbLanguage = document.getElementById("cbLanguage");
+		const cbMood = document.getElementById("cbMood");
+		const btnCreate = document.getElementById("btnCreate");
+		const btnModify = document.getElementById("btnModify");
+		const btnSave = document.getElementById("btnSave");
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+		const hiddenLanguage = document.getElementById("hiddenLanguage");
+		const hiddenMood = document.getElementById("hiddenMood");
+        const editable = false;
 
-            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.disabled = false);
+        checkboxes.forEach(ck => ck.disabled = !editable);
+        
+		cbLanguage.addEventListener("change", () => {
+            filterForm.submit();
+            console.log("language changed");
+        });
+
+		cbMood.addEventListener("change", () => {
+            filterForm.submit();
+            console.log("mood changed");
+        });
+
+		btnCreate.addEventListener("click", () => {
+            createMood();
+            console.log("create button clicked");
+        });
+
+		btnModify.addEventListener("click", () => {
+            widgetControl("modifyButton");
+            console.log("modify button clicked");
+        });
+
+		btnSave.addEventListener("click", () => {
+            passSavingData();
+            console.log("save button clicked");
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener("change", () => {
+                const index = cb.dataset.index;
+                let hiddenInput;
+
+                if (cb.id.startsWith("ckTense_")) {
+                    hiddenInput = document.querySelector(`input[type="hidden"][name="TenseList[${index}].IsChecked"]`);
+                } else if (cb.id.startsWith("ckPerson_")) {
+                    hiddenInput = document.querySelector(`input[type="hidden"][name="PersonList[${index}].IsChecked"]`);
+                }
+
+                if (hiddenInput) {
+                    hiddenInput.value = cb.checked.toString();
+                }
+            });
+        });
+
+        function widgetControl(widget)
+        {
+            switch (widget)
+            {
+                case "createButton":
+                    cbLanguage.disabled = true;
+                    cbMood.disabled = true;
+                    checkboxes.forEach(ck => {
+                        ck.disabled = false; 
+                        ck.checked = false;
+                    });
+                    btnModify.disabled = true;
+                    btnSave.disabled = false;
+					break;
+				case "modifyButton":
+                    cbLanguage.disabled = true;
+                    cbMood.disabled = true;
+                    checkboxes.forEach(ck => {
+                        ck.disabled = false;
+                    });
+                    btnCreate.disabled = true;
+                    btnSave.disabled = false;
+				    break;
+				default:
+                    cbLanguage.disabled = false;
+                    cbMood.disabled = true;
+                    btnCreate.disabled = true;
+                    btnModify.disabled = true;
+                    btnSave.disabled = true;
+                    checkboxes.forEach(ck => {
+                        ck.disabled = true;
+                    });
+				    break;     
+            }           
 		}
 
         function createMood()
         {
-            const language = '@(Model.LanguageName ?? "")';
             const newMood = prompt("Please enter new mood:");
-            if (!language || !mood) return;
-            const moodInput = document.querySelector('select[name="MoodType"]');
-            moodInput.value = newMood;
-            enbleEdit();
+            console.log(newMood);
+
+            if (!(cbLanguage.value) || !newMood) return;
+
+            const opt = document.createElement("option");
+            opt.text = newMood;
+            opt.value = newMood;
+            opt.selected = true;
+
+            cbMood.appendChild(opt);
+
+            widgetControl("createButton");
 		}
+
+        function passSavingData()
+        {
+            hiddenLanguage.value = cbLanguage.value;
+            hiddenMood.value = cbMood.value;
+        }
     </script>
 }
 

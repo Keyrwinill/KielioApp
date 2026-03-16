@@ -3,11 +3,9 @@
 	--------------------------------
 	20251115			Initial
 */
-using ViewModel.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Net.Http.Headers;
-using System.Text.Json;
+using ViewModel.Models.ResponseModels;
 
 namespace KielioApp.Controllers;
 
@@ -37,10 +35,25 @@ public class ImageController : Controller
 			return View("Index");
 		}
 
+		var content = new MultipartFormDataContent();
+		var stream = new StreamContent(imageFile.OpenReadStream());
+		stream.Headers.ContentType = new MediaTypeHeaderValue(imageFile.ContentType);
+
+		content.Add(stream, "file", imageFile.FileName);
+
+		var response = await _httpClient.PostAsync(
+			"http://127.0.0.1:8000/api/Image/Blur",
+			content
+		);
+
+		var result = await response.Content.ReadFromJsonAsync<ImageResponseModel>();
+		return View("Index", result);
+
+		/* >>20260221
 		// Save original image to /wwwroot/uploads
 		var uplaodsPath = Path.Combine(_env.WebRootPath, "uploads");
 		Directory.CreateDirectory(uplaodsPath);
-		var originalFilePath = Path.Combine(uplaodsPath, imageFile.Name);
+		var originalFilePath = Path.Combine(uplaodsPath, imageFile.FileName);
 		using (var stream = new FileStream(originalFilePath, FileMode.Create))
 		{
 			await imageFile.CopyToAsync(stream);
@@ -53,7 +66,7 @@ public class ImageController : Controller
 		fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(imageFile.ContentType);
 		content.Add(fileContent, "file", imageFile.FileName);
 
-		var response = await _httpClient.PostAsync("http://127.0.0.1:8000/Image/Blur", content);
+		var response = await _httpClient.PostAsync("http://127.0.0.1:8000/api/Image/Blur", content);
 
 		if (!response.IsSuccessStatusCode)
 		{
@@ -74,5 +87,6 @@ public class ImageController : Controller
 		ViewBag.ProcessedImage = "/processed/" + "processed_" + imageFile.FileName;
 
 		return View("Index");
+		<<20260221 */
 	}
 }

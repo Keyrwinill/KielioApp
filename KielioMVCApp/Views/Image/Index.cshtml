@@ -4,7 +4,7 @@
 	--------------------------------
     20251115            Initial
 *@
-@model ImageViewModel
+@model ImageResponseModel
 @{
     ViewData["Title"] = "Image blur";
 }
@@ -33,16 +33,16 @@
 
 <img id="previewOriginal" style="display:none; max-width:300px; margin-bottom:10px;" />
 
-@if (ViewBag.OriginalImage != null && ViewBag.ProcessedImage != null)
+@if (Model != null && Model.OriginalPath != "" && Model.ProcessedPath != "")
 {
     <div style="display:flex; gap:40px; margin-top:10px;">
         <div>
             <p>Original Image</p>
-            <img src="@ViewBag.OriginalImage" width="300" />
+            <img src=@Model.OriginalPath width="300" />
         </div>
         <div>
             <p>Processed Image</p>
-            <img src="@ViewBag.ProcessedImage" width="300" />
+            <img src=@Model.ProcessedPath width="300" />
         </div>
     </div>
 }

@@ -6,7 +6,6 @@
 */
 
 using DataAccessLibrary;
-using DataAccessLibrary.Dictionaries;
 using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
 using ViewModel.Models.RequestModels;
@@ -73,6 +72,17 @@ public class MoodSettingService : IMoodSettingService
 											   .ToList()
 								: [];
 
+		Dictionary<string, string> personType = new()
+		{
+			["1s"] = "Singular first person",
+			["2s"] = "Singular second person",
+			["3s"] = "Singular third person",
+			["1p"] = "Plural first person",
+			["2p"] = "Plural second person",
+			["3p"] = "Plural third person",
+			["2f"] = "Formal second person"
+		};
+
 		var response = new MoodSettingResponseModel()
 		{
 			LanguageName = !string.IsNullOrEmpty(languageName) ? languageName : "",
@@ -89,22 +99,24 @@ public class MoodSettingService : IMoodSettingService
 							.ToList(),
 
 			TenseList = _tense.GetAll()
+							  .Where(t => t.Language.Name == languageName)
 							  .OrderBy(t => t.SortOrder)
 							  .Select(t => new CheckboxViewModel
 							  {
 								  Name = t.Name,
-								  IsChecked = midMoodTenses.Any(midMT => midMT.Tense == t) == true
+								  IsChecked = midMoodTenses.Any(midMT => midMT.Tense == t && midMT.Mood.Type == moodType) == true
 							  })
 							  .ToList(),
 
 			PersonList = _verbPerson.GetAll()
+									.Where(p => p.Language.Name == languageName)
 									.OrderBy(p => p.SortOrder)
 									.Select(p => new CheckboxViewModel
 									{
-										Name = PersonTypeDictionary.PersonType.ContainsKey(p.Type) 
-												? PersonTypeDictionary.PersonType[p.Type] 
+										Name = personType.ContainsKey(p.Type) 
+												? personType[p.Type] 
 												: p.Type,
-										IsChecked = midMoodPersons.Any(midMP => midMP.VerbPerson == p) == true
+										IsChecked = midMoodPersons.Any(midMP => midMP.VerbPerson == p && midMP.Mood.Type == moodType) == true
 									}).ToList()
 		};
 
@@ -144,7 +156,7 @@ public class MoodSettingService : IMoodSettingService
 				Oid = Guid.NewGuid(),
 				Type = moodType,
 				LinkLanguage = language.Oid,
-				SortOrder = _mood.GetAll().Where(m => m.LinkLanguage == language.Oid).Count() + 1
+				SortOrder = _mood.GetAll().OrderByDescending(m => m.SortOrder).FirstOrDefault(m => m.LinkLanguage == language.Oid).SortOrder + 1
 			};
 			await _mood.AddAsync(mood);
 		}
@@ -182,7 +194,18 @@ public class MoodSettingService : IMoodSettingService
 			await _midMoodTense.AddAsync(midMoodTense);
 		}
 
-		var personCode = PersonTypeDictionary.PersonType.ToDictionary(x => x.Value, x => x.Key);
+		Dictionary<string, string> personType = new()
+		{
+			["1s"] = "Singular first person",
+			["2s"] = "Singular second person",
+			["3s"] = "Singular third person",
+			["1p"] = "Plural first person",
+			["2p"] = "Plural second person",
+			["3p"] = "Plural third person",
+			["2f"] = "Formal second person"
+		};
+
+		var personCode = personType.ToDictionary(x => x.Value, x => x.Key);
 		var selectedPersonCodes = personList.Where(x => x.IsChecked)
 											.Select(x => personCode[x.Name])
 											.ToHashSet();

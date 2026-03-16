@@ -2,6 +2,7 @@
     20251115    Initial -- Sidebar/Image tab/Deutsch tab
     20251122    Deutsch Verb
     20260104    Create Parent "Language" and Mood Person setting
+    20260303    Seperate CSS by page and move sidebar to _SidebarMenu.cshtml
 *@
 <!DOCTYPE html>
 <html lang="en">
@@ -12,87 +13,13 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <div class="d-flex">
         <!-- Sidebar -->
         <!-- CSS refers to wwwroot/site.css -->
-        <div class="sidebar">
-            <h4 class="text-primary">Kielio</h4>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="/">Home</a>
-                </li>
-                <!-- Parent menu with collapsible children -->
-                <li class="nav-item">
-                    <a class="nav-link"
-                       data-bs-toggle="collapse"
-                       data-bs-target="#collapseLanguage"
-                       aria-expanded="false" ,
-                       aria-controls="collapseLanguage">
-                       Language
-                    </a>
-                    <div class="collapse" id="collapseLanguage">
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link" href="/Language/MoodSetting">Mood Setting</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link"
-                                   data-bs-toggle="collapse"
-                                   data-bs-target="#collapseDeutsch"
-                                   aria-expanded="false" ,
-                                   aria-controls="collapseDeutsch">
-                                   Deutsch
-                                </a>
-                                <div class="collapse" id="collapseDeutsch">
-                                    <ul class="nav flex-column ms-3">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="/Language/Deutsch/Conjugation">Deutsch Verb</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="/Language/Deutsch/Adjective">Deutsch Adjective</a>
-                                        </li>
-									</ul>
-								</div>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link"
-                                   data-bs-toggle="collapse"
-                                   data-bs-target="#collapseFrançais"
-                                   aria-expanded="false" ,
-                                   aria-controls="collapseFrançais">
-                                    Français
-                                </a>
-                                <div class="collapse" id="collapseFrançais">
-                                    <ul class="nav flex-column ms-3">
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="/Language/Deutsch/Verb">Français Verb</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                       data-bs-toggle="collapse"
-                       data-bs-target="#collapseImage"
-                       aria-expanded="@(IsImageSectionActive() ? "true" : "false")"
-                       aria-controls="collapseImage">
-                        Image
-                    </a>
-                    <div class="collapse @(IsImageSectionActive() ? "show" : "")" id="collapseImage">
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link @(IsActivePage("/Image/Blur") ? "active" : "")" href="/Image/Blur">Image Blurring</a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-        </div>
+		@await Html.PartialAsync("_SidebarMenu")
         <div class="d-flex flex-column p-3 flex-grow-1">
             <main class="content p-3 flex-grow-1">
                 @RenderBody()
@@ -108,18 +35,3 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-@functions {
-    // Returns true if current page is under the Image section
-    bool IsImageSectionActive()
-    {
-        var path = Context.Request.Path.Value?.ToLower();
-        return path != null && path.StartsWith("/image");
-    }
-
-    // Returns true if current page matches the given path
-    bool IsActivePage(string pagePath)
-    {
-        var path = Context.Request.Path.Value?.ToLower();
-        return path == pagePath.ToLower();
-    }
-}
