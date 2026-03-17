@@ -14,7 +14,8 @@
 <hr />
 
 <form id="filterForm"
-      asp-action="Index"
+      asp-controller="MoodSetting"
+      asp-action="GetMood"
       method="get">
     
     <div>
@@ -43,7 +44,8 @@
     </div>
 </form>
 <form id="postForm"
-      asp-action="Index"
+      asp-controller="MoodSetting"
+      asp-action="SaveMood"
       method="post">
 
       <input type="hidden" id="hiddenLanguage" name="LanguageName" />

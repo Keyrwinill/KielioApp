@@ -1,5 +1,4 @@
-﻿@using ViewModel.Models.ResponseModels
-@*
+﻿@*
     Update date			Description 
 	--------------------------------
     20251115            Initial
@@ -37,7 +36,9 @@
 
 <hr />
 
-<form method="get">
+<form method="get"
+      asp-controller="DeutschAdjective"
+      asp-action="GetView">
     <div class="row">
         <label for="cbType" class="col-md-2 col-form-label fs-5">Type</label>
         <div class="col-md-4">            

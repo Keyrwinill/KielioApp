@@ -21,17 +21,17 @@ namespace KielioMVCApp.Controllers
 
 		[HttpGet]
 		[Route("/Language/MoodSetting")]
-		public IActionResult Index(string? languageName, string? moodType)
+		public IActionResult GetMood(string? languageName, string? moodType)
 		{
 			//+>>20260121
 			var response = _moodSettingService.GetMood(languageName, moodType);
-			return View(response);
+			return View("Index", response);
 			//+<<20260121
 		}
 		
 		[HttpPost]
 		[Route("/Language/MoodSetting")]
-		public async Task<IActionResult> Index(MoodSettingRequestModel request)
+		public async Task<IActionResult> SaveMood(MoodSettingRequestModel request)
 		{
 			//+>>20260121
 			await _moodSettingService.SaveMood(request);

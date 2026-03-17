@@ -2,7 +2,6 @@
   <Project Path="DataAccessLibrary/DataAccessLibrary.csproj" />
   <Project Path="KielioMVCApp/KielioMVCApp.csproj" />
   <Project Path="KielioWebAPI/KielioWebAPI.csproj" Id="ddcf9a2b-4c8e-45c6-ae24-f51cda376140" />
-  <Project Path="Script/Script.csproj" />
   <Project Path="WebModel/ViewModel.csproj" Id="a45b5caf-3b20-46d1-bddf-a243d54eaa86" />
   <Project Path="WebService/WebService.csproj" Id="ccbb5564-de62-44f8-8f63-797a0b762bf1" />
 </Solution>

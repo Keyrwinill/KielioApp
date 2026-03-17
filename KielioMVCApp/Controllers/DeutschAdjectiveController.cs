@@ -19,10 +19,10 @@ public class DeutschAdjectiveController : Controller
 
 	[HttpGet]
 	[Route("/Language/Deutsch/Adjective")]
-	public IActionResult Index(string articleType = "")
+	public IActionResult GetView(string articleType = "")
 	{
 		var adjectives = _deutschAdjektivService.GetViewByType(articleType);
 		ViewBag.SelectedType = articleType;
-		return View(adjectives);
+		return View("Index", adjectives);
 	}
 }
