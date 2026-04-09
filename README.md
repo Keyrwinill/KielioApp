@@ -45,6 +45,11 @@ In every language, verb forms are changing based on moods, tenses, and, persons.
 ##### 1.2.2. Choose a Mood => It will bring out the applicable tense and person. Modify button is enable, that is to change the setting of applicable tenses and persons.
 ![Mood Setting](Screenshots/MoodSetting_20260118.png "Mood Setting")
 
+#### 1.3. Deutsch Verb
+A verb has different form based on the mood, the tense, and the person. The relation between mood, tense, and person is defined in the function "Mood Setting".
+In this funtion, users can search the verb from by entering a verb, choosing a mood and a tense, a table of each form by person is displayed when clicking on the "Search" button.
+![Deutsch Verb](Screenshots/DeutschVerbSearch_20260409.png "Deutsch Verb")
+
 ### 2. ASP .NET core Web API
 #### 2.1. Deutsch Adjective
 API that correspond to 1.1, that can be called by other frontend App. (get only)
@@ -53,6 +58,5 @@ API that correspond to 1.1, that can be called by other frontend App. (get only)
 API that correspond to 1.2, that can be called by other frontend App.
    
 ## Upcoming Changes
-* Mood Setting: Add Create, Modify
-* Deutsch Verb: Add German Verb page that shows the conjugation based on Mood Settings
+* Deutsch Verb: Create/Modify German Verb data & Verb details
 * Create French Verb page
