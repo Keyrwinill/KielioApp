@@ -1,11 +1,15 @@
 /*
     20251115        Initial
 */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
 .sidebar {
     top: 0;
     left: 0;
     width: 250px;
-    height: 100vh;
     color: #4a5968;
     background: linear-gradient(to bottom, #4dffb8, #1affff);
     overflow-y: auto;

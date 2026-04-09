@@ -1,0 +1,136 @@
+﻿@*
+    Update date			Description 
+	--------------------------------
+    20260328            Initial
+*@
+
+@{
+	var verbData = Model;
+}
+
+<h2>Modify Conjugation</h2>
+<form asp-controller="Conjugation"
+      asp-action="Modify"
+      id="formVerbModify"
+      method="get">
+    <div>
+        <label id="labelVerb">Verb</label>
+        <input class="verbInput"
+               id="inputVerb"
+               type="text"
+               name="verb" />
+        <br />
+        <!--Mood-->
+        <label id="labelMood">Mood</label>
+        <select id="cbMood"
+                name="mood">
+                <option value="">--Choose a mood--</option>
+            @foreach (var mood in Model.MoodList)
+            {
+                <option value="@mood">@mood</option>
+            }
+        </select>
+        <br />
+        <!--Tense-->
+        <label id="labelTense">Tense</label>
+        <select id="cbTense"
+                name="tense">
+            <option value="">--Choose a tense--</option>
+        </select>
+
+        <div id="divPerson"></div>
+    </div>
+</form>
+<form asp-controller="Conjugation"
+      asp-action="SaveVerb"
+      id="formVerbSave"
+      method="post">
+    <button type="submit"
+            class="btn btn-primary"
+            id="btnSave">
+        Save
+    </button>
+</form>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/VerbModify.css" />
+}
+
+@section Scripts {
+    <script>
+        const formVerbModify = document.getElementById("formVerbModify");
+        const verbInput = document.getElementById("inputVerb");
+        const cbMood = document.getElementById("cbMood");
+        const cbTense = document.getElementById("cbTense");
+
+        const verb = "@(verbData?.Infinitive ?? "")";
+
+        if (verb) {
+            verbInput.value = verb;
+            verbInput.textContent = verb;
+            verbInput.disabled = true;
+		}
+        else {
+            verbInput.value = "";
+			verbInput.textContent = "";
+			verbInput.disabled = false;
+        }
+
+        cbMood.addEventListener("change", function() {
+            const mood = this.value;
+            console.log("mood: " + mood);
+
+			// Refresh the tense dropdown based on the selected mood
+            //fetch(`@Url.Action("GetTenseListByMood", "Conjugation", new { mood = "mood" })?mood=${mood}`.replace("mood", mood))
+            fetch(`@Url.Action("GetTenseListByMood", "Conjugation")?mood=${encodeURIComponent(mood)}`)
+                .then(response => response.json())
+                .then(data => {
+                    cbTense.innerHTML = '<option value="" selected>--Choose a tense--</option>';
+                    data.forEach(t => {
+                        const option = document.createElement("option");
+                        option.value = t;
+                        option.textContent = t;
+
+                        cbTense.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error fetching tenses:", error));
+            
+			// Display the person fields based on the selected mood
+            fetch(`@Url.Action("GetPersonList", "Conjugation")?mood=${encodeURIComponent(mood)}`)
+				.then(response => response.json())
+                .then(data => {
+                    const divPerson = document.getElementById("divPerson");
+                    // Form the HTML for the person fields
+                    let htmlPerson = "";
+                    Object.entries(data).forEach(([key, value]) => {
+                        htmlPerson += `
+                            <label class="personLabel" data-key="${value}" id="label${key}">${value}</label>
+                            <input type="text" class="personInput" data-key="${value}" id="input_${key}" />
+                            <br />
+                        `;
+                    })
+
+					divPerson.innerHTML = htmlPerson;
+                })
+        })
+
+        cbTense.addEventListener("change", function() {
+            const verb = verbInput.value.trim();
+            const mood = cbMood.value;
+            const tense = this.value;
+
+			// Set values for person fields based on the selected tense
+			const inputs = document.querySelectorAll(".personInput");
+
+            fetch(`@Url.Action("GetVerbForms", "Conjugation")?verb=${encodeURIComponent(verb)}&&mood=${encodeURIComponent(mood)}&&tense=${encodeURIComponent(tense)}`)
+				.then(response => response.json())
+                .then(data => {
+                    inputs.forEach(input => {
+                        const key = input.dataset.key;
+                        input.value = data[key];
+					});
+                })
+        });
+    </script>
+}

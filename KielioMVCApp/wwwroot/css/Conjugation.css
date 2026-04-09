@@ -1,0 +1,46 @@
+﻿/*
+    20260331        Initial
+*/
+#labelVerb, #labelMood, #labelTense {
+    width: 70px;
+    height: 40px;
+}
+
+.verbInput, .cbSet {
+    width: 200px;
+}
+
+.inputGroup, .searchConditionGroup {
+    display: inline-block;
+    margin-right: 30px;
+}
+
+#stInfinitive {
+    color: #cc33ff;
+    font-family: "Lucida Console";
+    font-size: 40px;
+    font-weight: 600;
+}
+
+.chosenMood {
+    color: #661aff;
+    text-align: center;
+    font-family: "Courier New";
+    font-size: 36px;
+}
+
+.captionTense {
+    caption-side: top;
+    font-size: 150%;
+}
+
+.conjugationTable thead th,
+.conjugationTable tbody td {
+    border: 1px solid black;
+}
+
+.conjugationTable thead th {
+    background-color: #33cc33;
+    color: #00ffff;
+    font-weight: bold;
+}

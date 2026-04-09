@@ -3,8 +3,9 @@
 	--------------------------------
 	20260126			Initial
 */
+using DataAccessLibrary.Entities;
 using Microsoft.AspNetCore.Mvc;
-using ViewModel.Models.NeutralModel;
+using ViewModel.Models.NeutralModels;
 using WebService.Interfaces;
 
 namespace KielioWebAPI.Controllers
@@ -21,14 +22,14 @@ namespace KielioWebAPI.Controllers
 		}
 
 		[HttpGet]
-		public IActionResult GetConjugation([FromQuery] string? infinitive)
+		public IActionResult GetConjugation([FromQuery] string? languageName, [FromQuery] string? verb, [FromQuery] string? mood = "", [FromQuery] string? tense = "")
 		{
-			if (string.IsNullOrEmpty(infinitive))
+			if (string.IsNullOrEmpty(verb))
 			{
-				return BadRequest("Infinitive is required.");
+				return BadRequest("Verb is required.");
 			}
 
-			var response = _conjugationService.GetConjugation(infinitive);
+			var response = _conjugationService.GetConjugation(languageName, verb, mood, tense);
 			return Ok(response);
 		}
 

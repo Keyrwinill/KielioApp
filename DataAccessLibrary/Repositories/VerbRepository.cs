@@ -7,6 +7,7 @@
 	20260109			Create methods for Verb, VerbPerson, Conjugation, Tense
 	20260120			Create create and delete methods for Mood, MidMoodTEnse, MidMoodPerson
 	20260126			Create Delete method for Conjugation and Verb
+	20260328			Add search condition
 */
 using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
@@ -76,6 +77,17 @@ public class TenseRepository : ITenseRepository
 	{
 		return _context.Tenses;
 	}
+	//+>>20260328
+	public List<Tense> GetTensesByMood(string mood)
+	{
+		var tenses = (from m in _context.Moods
+					  join mmt in _context.MidMoodTenses on m.Oid equals mmt.LinkMood
+					  join t in _context.Tenses on mmt.LinkTense equals t.Oid
+					  where m.Type == mood
+					  select t).ToList();
+		return tenses;
+	}
+	//+<<20260328
 	//+>>20260109
 	public async Task AddAsync(Tense tense)
 	{
@@ -104,6 +116,17 @@ public class VerbPersonRepository : IVerbPersonRepository
 	{
 		return _context.VerbPersons;
 	}
+	//+>>20260328
+	public List<VerbPerson> GetVerbPersonsByMood(string mood)
+	{
+		var verbPersons = (from m in _context.Moods
+							join mmp in _context.MidMoodPersons on m.Oid equals mmp.LinkMood
+							join vp in _context.VerbPersons on mmp.LinkVerbPerson equals vp.Oid
+							where m.Type == mood
+							select vp).ToList();
+		return verbPersons;
+	}
+	//+<<20260328
 	//+>>20260109
 	public async Task AddAsync(VerbPerson verbPerson)
 	{
@@ -132,6 +155,17 @@ public class ConjugationRepository : IConjugationRepository
 	{
 		return _context.Conjugations;
 	}
+	//+>>20260328
+	public List<Conjugation> GetConjugationByMoodTense(string verb, string mood, string tense)
+	{
+		var conjugations = (from c in _context.Conjugations
+							join v in _context.Verbs on c.LinkVerb equals v.Oid
+							join mmt in _context.MidMoodTenses on c.LinkMidMoodTense equals mmt.Oid
+							where (v.Infinitive == verb && mmt.MoodType == mood && mmt.TenseName == tense)
+							select c).ToList();
+		return conjugations;
+	}
+	//+<<20260328
 	//+>>20260109
 	public async Task AddAsync(Conjugation conjugation)
 	{
@@ -170,6 +204,14 @@ public class MoodRepository : IMoodRepository
 	{
 		return _context.Moods;
 	}
+	//+>>20260328
+	public List<Mood> GetMoodsByLanguage(string languageName)
+	{
+		var language = _context.Languages.FirstOrDefault(l => l.Name == languageName);
+		var moods = _context.Moods.Where(m => m.LinkLanguage == language.Oid).ToList();
+		return moods;
+	}
+	//+<<20260328
 
 	//+>>20260108
 	public async Task AddAsync(Mood mood)

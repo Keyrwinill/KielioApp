@@ -7,6 +7,7 @@
 	20260109			Create methods for Verb, VerbPerson, Conjugation, Tense
 	20260120			Create create and delete methods for Mood, MidMoodTEnse, MidMoodPerson
 	20260126			Create Delete method for Conjugation and Verb
+	20260328			Add search condition
 */
 using DataAccessLibrary.Entities;
 
@@ -27,6 +28,7 @@ public interface ITenseRepository
 	Tense GetByOid(Guid oid);
 	Tense GetByLanguageName(string languageName);
 	IEnumerable<Tense> GetAll();
+	List<Tense> GetTensesByMood(string mood);	//+20260328
 	//+>>20260109
 	Task AddAsync(Tense tense);
 	Task AddRangeAsync(IEnumerable<Tense> tenses);
@@ -37,6 +39,7 @@ public interface IVerbPersonRepository
 {
 	VerbPerson GetByOid(Guid oid);
 	IEnumerable<VerbPerson> GetAll();
+	List<VerbPerson> GetVerbPersonsByMood(string mood);     //+20260328
 	//+>>20260109
 	Task AddAsync(VerbPerson verbPerson);
 	Task AddRangeAsync(IEnumerable<VerbPerson> verbPersons);
@@ -47,6 +50,7 @@ public interface IConjugationRepository
 {
 	Conjugation GetByOid(Guid oid);
 	IQueryable<Conjugation> GetAll();
+	List<Conjugation> GetConjugationByMoodTense(string verb, string mood, string tense);	//+20260328
 	//+>>20260109
 	Task AddAsync(Conjugation conjugation);
 	Task AddRangeAsync(IEnumerable<Conjugation> conjugations);
@@ -59,6 +63,7 @@ public interface IMoodRepository
 {
 	Mood GetByOid(Guid oid);
 	IEnumerable<Mood> GetAll();
+	List<Mood> GetMoodsByLanguage(string languageName);     //+20260328
 	//+>>20260108
 	Task AddAsync(Mood mood);
 	Task AddRangeAsync(IEnumerable<Mood> moods);
