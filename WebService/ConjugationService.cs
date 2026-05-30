@@ -2,11 +2,13 @@
 	Update date			Description 
 	--------------------------------
 	20260126			Initial
+	20240418			Add Error handeling
 */
 using DataAccessLibrary;
 using DataAccessLibrary.Entities;
 using DataAccessLibrary.Interfaces;
 using ViewModel.Models.NeutralModels;
+using ViewModel.Models.ResponseModels;
 using WebService.Interfaces;
 
 namespace WebService;
@@ -48,65 +50,45 @@ public class ConjugationService : IConjugationService
 	}
 
 	//GET
-	public ConjugationModel GetConjugation(string? languageName, string? verb, string? mood, string? tense)
+	public ConjugationModel? GetConjugation(string? languageName, string? verb, string? mood, string? tense)
 	{
-		var language = _language.GetAll().FirstOrDefault(l => l.Name == languageName);
-		var verbObj = FindInfinitiveForm(language, verb);
+		var isInitial = IsInitial(verb, mood, tense);
+		var language = _language.GetAll().FirstOrDefault(l => l.Name == NormalizeLanguageName(languageName));
+		var verbObj = language != null ? FindInfinitiveForm(language, verb) : null;
+		var isSuccess = verbObj != null;
 
-		if (verbObj == null)
+		return new ConjugationModel
 		{
-			throw new Exception("Verb not found");
-		}
-		else
+			Language = languageName,
+			MoodList = string.IsNullOrEmpty(languageName) ? new List<string>() : GetMoodList(languageName),
+			TenseList = string.IsNullOrEmpty(mood) ? new List<string>() : GetTenseList(mood),
+			Infinitive = verbObj?.Infinitive ?? "",
+			Translation = "",                                   //keep it for future design
+			PastParticiple = "",                                //keep it for future design
+			Reflexive = false,                                  //keep it for future design
+			Separable = false,                                  //keep it for future design
+			Mood = mood,                                        //chosen mood
+			Tense = tense,                                      //chosen tense
+			Forms = GetFormByTense(verbObj?.Infinitive ?? "", mood, tense)
+		};
+
+		bool IsInitial(string? verb, string? mood, string? tense)
 		{
-			if (!string.IsNullOrEmpty(verb) && !string.IsNullOrEmpty(mood) && !string.IsNullOrEmpty(tense))
-			{
-				var conjugationModel = new ConjugationModel
-				{
-					Language = languageName,
-					MoodList = GetMoodList(languageName),
-					Infinitive = verbObj.Infinitive,
-					Translation = verbObj.Translation,
-					PastParticiple = verbObj.PastParticiple,
-					Reflexive = verbObj.Reflexive,
-					Separable = verbObj.Separable,
-					Mood = mood,
-					Tense = tense,
-					Forms = GetFormByTense(verb, mood, tense)
-				};
-				return conjugationModel;
-			}
-			else
-			{ 	
-				var conjugationModel = new ConjugationModel
-				{
-					Language = languageName,
-					MoodList = GetMoodList(languageName),
-					Infinitive = verbObj.Infinitive,
-					Translation = verbObj.Translation,
-					PastParticiple = verbObj.PastParticiple,
-					Reflexive = verbObj.Reflexive,
-					Separable = verbObj.Separable,
-					Mood = "",
-					Tense = "",
-					Forms = new Dictionary<string, string>()
-				};
-				return conjugationModel;
-			}
+			return string.IsNullOrEmpty(verb) && string.IsNullOrEmpty(mood) && string.IsNullOrEmpty(tense);
 		}
 
-		Verb FindInfinitiveForm(Language language, string? verb)
+		Verb? FindInfinitiveForm(Language language, string? verb)
 		{
 			var infinitiveVerb = (from v in _verb.GetAll()
-								  where v.LinkLanguage == language.Oid && v.Infinitive == verb
-								  select v)
-								  .FirstOrDefault();
+									where v.LinkLanguage == language.Oid && v.Infinitive == verb
+									select v)
+									.FirstOrDefault();
 
 
 			var conjugationVerb = (from c in _conjugation.GetAll()
-								   where c.Verb.LinkLanguage == language.Oid && c.Form == verb
-								   select c)
-								   .FirstOrDefault(c => c.Form == verb);
+									where c.Verb!.LinkLanguage == language.Oid && c.Form == verb
+									select c)
+									.FirstOrDefault(c => c.Form == verb);
 			if (infinitiveVerb != null)
 			{
 				return infinitiveVerb;
@@ -119,51 +101,62 @@ public class ConjugationService : IConjugationService
 			{
 				return null;
 			}
-		}
-		/*
-		Dictionary<string, string> GetFormByTense(string? verb, string? mood, string? tense)
+			}
+	}
+
+	public string NormalizeLanguageName(string? languageName)
+	{
+		return languageName!.ToLower() switch
 		{
-			var form = (from c in _conjugation.GetConjugationByMoodTense(verb, mood, tense)
-						join mmp in _midMoodPerson.GetAll() on c.LinkMidMoodPerson equals mmp.Oid
-						join vp in _verbPerson.GetAll() on mmp.LinkVerbPerson equals vp.Oid
-						where mmp.MoodType == mood
-						orderby vp.SortOrder
-						select new
-						{
-							Pronoun = vp.Pronoun,
-							Form = c.Form
-						})
-						.ToDictionary(x => x.Pronoun, x => x.Form);
-			return form;
-		}
-		*/
+			"deutsch" => "German",
+			"français" => "French",
+			_ => languageName
+		};
+	}
+
+	public bool Exists(string languageName, string verb)
+	{
+		var language = _language.GetAll().FirstOrDefault(l => l.Name == NormalizeLanguageName(languageName));
+		var infinite = _verb.GetAll().Any(v => v.Language == language && v.Infinitive == verb);
+		var conjugation = _conjugation.GetAll().Any(c => c.Form == verb);
+
+		return (infinite || conjugation);
 	}
 
 	public Dictionary<string, string> GetFormByTense(string? verb, string? mood, string? tense)
 	{
-		var form = (from c in _conjugation.GetConjugationByMoodTense(verb, mood, tense)
-					join mmp in _midMoodPerson.GetAll() on c.LinkMidMoodPerson equals mmp.Oid
-					join vp in _verbPerson.GetAll() on mmp.LinkVerbPerson equals vp.Oid
+		var conjugations = _conjugation.GetConjugationByMoodTense(verb, mood, tense).ToList();
+		var midMoodPersons = _midMoodPerson.GetAll().ToList();
+		var verbPersons = _verbPerson.GetAll().ToList();
+
+		var form = (from mmp in midMoodPersons
+					join vp in verbPersons on mmp.LinkVerbPerson equals vp.Oid
+					join c in conjugations on mmp.Oid equals c.LinkMidMoodPerson into conjugationGroup
+					from c in conjugationGroup.DefaultIfEmpty()
 					where mmp.MoodType == mood
 					orderby vp.SortOrder
 					select new
 					{
 						Pronoun = vp.Pronoun,
-						Form = c.Form
+						Form = c != null ? c.Form : ""
 					})
 					.ToDictionary(x => x.Pronoun, x => x.Form);
+		
 		return form;
 	}
 
-	public List<string> GetMoodList(string? languageName)
+	public List<string> GetMoodList(string languageName)
 	{
-		var moods = _mood.GetMoodsByLanguage(languageName)
+		var languageNameEng = NormalizeLanguageName(languageName);
+		var moods = _mood.GetMoodsByLanguage(languageNameEng)
+						 .OrderBy(m => m.SortOrder)
 						 .Select(m => m.Type)
+						 .Distinct()
 						 .ToList();
 		return moods;
 	}
 
-	public List<string> GetTenseList(string? mood)
+	public List<string> GetTenseList(string mood)
 	{
 		var tenses = _tense.GetTensesByMood(mood)
 						   .OrderBy(t => t.SortOrder)
@@ -173,7 +166,7 @@ public class ConjugationService : IConjugationService
 		return tenses;
 	}
 
-	public Dictionary<string, string> GetPersonList(string? mood)
+	public Dictionary<string, string> GetPersonList(string mood)
 	{
 		var persons = _verbPerson.GetVerbPersonsByMood(mood)
 								 .OrderBy(vp => vp.SortOrder)
@@ -183,44 +176,33 @@ public class ConjugationService : IConjugationService
 								 	Pronoun = vp.Pronoun
 								 })
 								 .Distinct()
-								 .ToDictionary(x => x.Type, x => x.Pronoun);
+								 .ToDictionary(x => x.Type, x => x.Pronoun) ?? new Dictionary<string, string>();
 
 		return persons;
 	}
 
 	//POST
-	public async Task SaveVerb(ConjugationModel request)
-	{
-		/*
-		if (_verb.GetAll().Any(v => v.Infinitive == request.Infinitive))
+	public async Task SaveVerb(ConjugationModel request, string languageName)
+	{	
+		var verb = _verb.GetAll().FirstOrDefault(v => v.Infinitive == request.Infinitive);
+		var mood = _mood.GetAll().FirstOrDefault(m => m.Type == request.Mood);
+		var tense = _tense.GetAll().FirstOrDefault(t => t.Name == request.Tense);
+
+		if (verb != null)
 		{
-			var verb = _verb.GetAll().FirstOrDefault(v => v.Infinitive == request.Infinitive);
-			if (verb == null)
-			{
-				return;
-			}
-			_verb.RemoveConjugation(verb);			
-			await CreateConjugations(request, verb);
+			_verb.RemoveConjugation(verb, mood, tense);			
+			await CreateConjugations(request, verb, mood, tense);
 		}
 		else
 		{
-			var verb = await CreateVerb(request);
-			await CreateConjugations(request, verb);
+			var newVerb = await CreateVerb(request);
+			await CreateConjugations(request, newVerb, mood, tense);
 		}
 		await _unitOfWork.SaveAsync();
 
 		async Task<Verb> CreateVerb(ConjugationModel request)
 		{
-			if (request == null)
-			{
-				throw new Exception("Invalid request");
-			}
-			if (string.IsNullOrEmpty(request.Infinitive))
-			{
-				throw new Exception("Infinitive is required");
-			}
-
-			var language = _language.GetAll().FirstOrDefault(l => l.Name == request.Language);
+			var language = _language.GetAll().FirstOrDefault(l => l.Name == NormalizeLanguageName(languageName));
 			var verb = new Verb
 			{
 				Infinitive = request.Infinitive,
@@ -229,56 +211,31 @@ public class ConjugationService : IConjugationService
 				Reflexive = request.Reflexive,
 				Separable = request.Separable,
 				Language = language,
-				LinkLanguage = language.Oid
+				LinkLanguage = language!.Oid
 			};
 			await _verb.AddAsync(verb);
 			return verb;
 		}
 
-		async Task CreateConjugations(ConjugationModel request, Verb verb)
+		async Task CreateConjugations(ConjugationModel request, Verb verb, Mood mood, Tense tense)
 		{
-			if (request == null)
+			var midMoodTense = _midMoodTense.GetAll().FirstOrDefault(mmt => mmt.LinkMood == mood.Oid && mmt.LinkTense == tense.Oid);
+			foreach (var item in request.Forms)
 			{
-				throw new Exception("Invalid request");
-			}
-
-			var moodList = _mood.GetAll().Where(m => request.Conjugations.Select(c => c.Mood).Contains(m.Type)).ToList();
-			var tenseList = _tense.GetAll().Where(t => request.Conjugations.Select(c => c.Tense).Contains(t.Name)).ToList();
-			var personList = _verbPerson.GetAll().Where(p => request.Conjugations.SelectMany(c => c.Forms.Keys).Contains(p.Pronoun)).ToList();
-
-
-			var midMoodTenses = _midMoodTense.GetAll().Where(mmt => moodList.Contains(mmt.Mood) &&
-																	tenseList.Contains(mmt.Tense)).ToList();
-			var midMoodPersons = _midMoodPerson.GetAll().Where(mmp => moodList.Contains(mmp.Mood) &&
-																	  personList.Contains(mmp.VerbPerson)).ToList();
-
-			foreach (var mmt in midMoodTenses)
-			{
-				var conjugationForm = request.Conjugations.FirstOrDefault(c => c.Mood == mmt.Mood.Type && c.Tense == mmt.Tense.Name);
-				if (conjugationForm != null)
+				var person = _verbPerson.GetAll().FirstOrDefault(p => p.Pronoun == item.Key);
+				var midMoodPerson = _midMoodPerson.GetAll().FirstOrDefault(mmp => mmp.MoodType == request.Mood && mmp.LinkVerbPerson == person.Oid);
+				var conjugation = new Conjugation
 				{
-					foreach (var form in conjugationForm.Forms)
-					{
-						var verbPerson = personList.FirstOrDefault(p => p.Pronoun == form.Key);
-						var midMoodPerson = midMoodPersons.FirstOrDefault(mmp => mmp.Mood == mmt.Mood && mmp.VerbPerson == verbPerson);
-						if (midMoodPerson != null)
-						{
-							var conjugation = new Conjugation
-							{
-								Form = form.Value,
-								Verb = verb,
-								LinkVerb = verb.Oid,
-								MidMoodTense = mmt,
-								LinkMidMoodTense = mmt.Oid,
-								MidMoodPerson = midMoodPerson,
-								LinkMidMoodPerson = midMoodPerson.Oid
-							};
-							await _conjugation.AddAsync(conjugation);
-						}
-					}
-				}
+					Form = item.Value,
+					Verb = verb,
+					LinkVerb = verb.Oid,
+					MidMoodTense = midMoodTense,
+					LinkMidMoodTense = midMoodTense.Oid,
+					MidMoodPerson = midMoodPerson,
+					LinkMidMoodPerson = midMoodPerson.Oid
+				};
+				await _conjugation.AddAsync(conjugation);
 			}
 		}
-		*/
 	}
 }

@@ -3,11 +3,15 @@
 	--------------------------------
     20250316            Initial
 *@
-@model ConjugationModel
+@model ResponseModel<ConjugationModel>
 @{
-    
-    var verbData = Model;  
-	var languageName = ViewBag.LanguageName as string;
+
+    var verbData = Model.Data;  
+    var languageName = ViewBag.LanguageName as string;
+    var errorCode = Model.ErrorCode;
+    var message = Model.Message;
+    var moodList = verbData?.MoodList ?? new List<string>();
+    var tenseList = verbData?.TenseList ?? new List<string>();
 }
 
 <h2>@($"{languageName} Verb")</h2>
@@ -26,6 +30,7 @@
                        id="inputVerb"
                        type="text"
                        name="verb"
+                       value="@(verbData?.Infinitive ?? "")"
                        placeholder="Please enter a verb." />
             </div>
             <!--Create & Modify-->
@@ -48,20 +53,25 @@
                 <select class="cbSet"
                         id="cbMood"
                         name="mood">
-                        <option value="">--Choose a mood--</option>
-                    @foreach (var mood in Model.MoodList)
-                    {
-                        <option value="@mood">@mood</option>
-                    }
+                        <option value="" selected="@(string.IsNullOrEmpty(verbData?.Mood) ? "selected" : null)">--Choose a mood--</option>
+                        @foreach (var mood in moodList)
+					    {
+						    <option value="@mood" selected="@(mood == verbData?.Mood ? "selected" : null)">@mood</option>
+					    }       
                 </select>
             </div>
+            <br />
             <!--Tense-->
             <div class="searchConditionGroup">
                 <label id="labelTense">Tense</label>
                 <select class="cbSet"
                         id="cbTense"
                         name="tense">
-                        <option value="">--Choose a tense--</option>
+                    <option value="" selected="@(string.IsNullOrEmpty(verbData?.Tense) ? "selected" : null)">--Choose a tense--</option>
+                    @foreach (var tense in tenseList)
+					{
+						<option value="@tense" selected="@(tense == verbData?.Tense ? "selected" : null)">@tense</option>
+					}
                 </select>
             </div>
             <!--Search-->
@@ -77,40 +87,50 @@
 
 <hr />
 
-<div>
-    @if (verbData != null && !string.IsNullOrEmpty(verbData.Infinitive) && !string.IsNullOrEmpty(verbData.Mood) && !string.IsNullOrEmpty(verbData.Tense))
-    {
-        <h3 id="stInfinitive">@verbData.Infinitive</h3>
+<!-- Handle errors and display verb data -->
+@if (errorCode == "0000")    //other errors
+{
+    <div>
+        @if (verbData != null && !string.IsNullOrEmpty(verbData.Infinitive) && !string.IsNullOrEmpty(verbData.Mood) && !string.IsNullOrEmpty(verbData.Tense))
+        {
+            <h3 id="stInfinitive">@verbData.Infinitive</h3>
 
-        <h4 class="chosenMood">@verbData.Mood</h4>
-        <table class="table table-bordered conjugationTable">
-            <caption class="captionTense">@verbData.Tense</caption>
-            <thead>
-                <tr>
-                    <th>Person</th>
-                    <th>Conjugation</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (verbData.Forms != null && verbData.Forms.Any())
-                {
-                    @foreach (var form in verbData.Forms)
+            <h4 class="chosenMood">@verbData.Mood</h4>
+            <table class="table table-bordered conjugationTable">
+                <caption class="captionTense">@verbData.Tense</caption>
+                <thead>
+                    <tr>
+                        <th>Person</th>
+                        <th>Conjugation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (verbData.Forms != null && verbData.Forms.Any())
                     {
-                        <tr>
-                            <td>@form.Key</td>
-                            <td>@form.Value</td>
-                        </tr>
+                        @foreach (var form in verbData.Forms)
+                        {
+                            <tr>
+                                <td>@form.Key</td>
+                                <td>@form.Value</td>
+                            </tr>
+                        }
                     }
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <h3 id="stInfinitive"></h3>
-    }
-</div>
-
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <h3 id="stInfinitive"></h3>
+        }
+    </div>
+    
+}
+else
+{
+    <script>
+        alert("@message");
+    </script>
+}
 
 @section Styles {
     <link rel="stylesheet" href="~/css/Conjugation.css" />
@@ -126,36 +146,62 @@
         const btnModify = document.getElementById("btnModify");
         const btnSearch = document.getElementById("btnSearch");
 
-        //let verb = inputVerb.value.trim();
-        const verb = "@(verbData?.Infinitive ?? "")";
+        const model = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+
+        let verb = model.Data.Infinitive ?? "";
+        console.log("Input: " + verb);
 
         btnModify.disabled = !verb;
 
+        inputVerb.addEventListener("change", async function() {
+            const input = encodeURIComponent(this.value.trim());
+            const languageName = encodeURIComponent('@Html.Raw(languageName)');
+            const response = await fetch(
+                `/Conjugation/CheckVerb?languageName=${languageName}&verb=${input}`
+            );
+            const data = await response.json();
+            console.log(data);
+
+            if (data.errorCode === "0001")
+            {
+                let choice = confirm(`@message Do you want to create it?`);
+                if (choice) {
+                    const baseUrl = '@Html.Raw(Url.Action("Modify", "Conjugation", new { languageName = languageName }))';
+                    const inputVerb = document.getElementById("inputVerb");
+
+                    const verb = inputVerb.value.trim();
+                    console.log("input: " + input);
+
+                    location.href = baseUrl + `?mode=create&verb=${encodeURIComponent(input)}`;
+                }
+                else {
+                    location.href = '@Html.Raw(Url.Action("GetConjugation", "Conjugation", new { languageName = languageName }))'
+                }
+            }
+        });
+
         cbMood.addEventListener("change", function () {
-            const mood = this.value;
-            console.log("mood: " + mood);
+            const selectedMood = this.value;
+			const selectedTense = cbTense.value;
 
             //fetch(`@Url.Action("GetTenseListByMood", "Conjugation", new { mood = "mood" })?mood=${mood}`.replace("mood", mood))
-            fetch(`@Url.Action("GetTenseListByMood", "Conjugation")?mood=${encodeURIComponent(mood)}`)
+            fetch(`@Html.Raw(Url.Action("GetTenseListByMood", "Conjugation"))?mood=${encodeURIComponent(selectedMood)}`)
                 .then(response => response.json())
                 .then(data => {
-                    cbTense.innerHTML = '<option value="" selected>--Choose a tense--</option>';
+                    cbTense.innerHTML = '<option value="">--Choose a tense--</option>';
                     data.forEach(t => {
-                        const option = document.createElement("option");
-                        option.value = t;
-                        option.textContent = t;
-
-                        cbTense.appendChild(option);
+                        cbTense.appendChild(new Option(t, t));
                     });
                 })
 				.catch(error => console.error("Error fetching tenses:", error));
-        })
+        });
 
         btnSearch.addEventListener("click", () => {
             const verb = inputVerb.value.trim();
             const mood = cbMood.value;
             const tense = cbTense.value;
 
+			// Validation before submitting the form
             if (!verb) {
                 alert("Please enter a verb.");
 				return;
@@ -176,22 +222,24 @@
 
         btnCreate.addEventListener("click", () => {
         
-            location.href = '@Url.Action("Modify", "Conjugation", new 
+            location.href = '@Html.Raw(Url.Action("Modify", "Conjugation", new 
             { 
                 mode = "create",
                 languageName = languageName, 
                 verb = ""
-            })';
+            }))';
 		});
 
         btnModify.addEventListener("click", () => {
-            
-            location.href = '@Url.Action("Modify", "Conjugation", new 
+
+            location.href = '@Html.Raw(Url.Action("Modify", "Conjugation", new 
             { 
 				mode = "modify",
                 languageName = languageName, 
-                verb = verbData != null ? verbData.Infinitive : ""
-            })';
+                verb = verbData != null ? verbData.Infinitive : "",
+                mood = verbData.Mood,
+                tense = verbData.Tense
+            }))';
         });
 
     </script>

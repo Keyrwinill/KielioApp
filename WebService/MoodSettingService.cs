@@ -53,13 +53,11 @@ public class MoodSettingService : IMoodSettingService
 						 .Where(m => m.Language?.Name == languageName)
 						 .OrderBy(m => m.SortOrder)
 						 .ToList();
-		var allTenses = _tense.GetAll().ToList();
-		var allPersons = _verbPerson.GetAll().ToList();
-
+		
 		var selectedMood = !string.IsNullOrEmpty(moodType) 
 						   ? moods.FirstOrDefault(m => m.Type == moodType)
 						   : moods.FirstOrDefault();
-
+		
 		var midMoodTenses = selectedMood != null
 								? _midMoodTense.GetAll()
 											   .Where(mmt => mmt.Mood == selectedMood)
@@ -71,17 +69,6 @@ public class MoodSettingService : IMoodSettingService
 											   .Where(mmp => mmp.Mood == selectedMood)
 											   .ToList()
 								: [];
-
-		Dictionary<string, string> personType = new()
-		{
-			["1s"] = "Singular first person",
-			["2s"] = "Singular second person",
-			["3s"] = "Singular third person",
-			["1p"] = "Plural first person",
-			["2p"] = "Plural second person",
-			["3p"] = "Plural third person",
-			["2f"] = "Formal second person"
-		};
 
 		var response = new MoodSettingResponseModel()
 		{
@@ -113,8 +100,8 @@ public class MoodSettingService : IMoodSettingService
 									.OrderBy(p => p.SortOrder)
 									.Select(p => new CheckboxViewModel
 									{
-										Name = personType.ContainsKey(p.Type) 
-												? personType[p.Type] 
+										Name = GetPersonType().ContainsKey(p.Type) 
+												? GetPersonType()[p.Type] 
 												: p.Type,
 										IsChecked = midMoodPersons.Any(midMP => midMP.VerbPerson == p && midMP.Mood.Type == moodType) == true
 									}).ToList()
@@ -124,19 +111,6 @@ public class MoodSettingService : IMoodSettingService
 	}
 
 	//+>>20260120
-	//POST (rebuild response)
-	public MoodSettingResponseModel RebuildResponse(MoodSettingRequestModel request)
-	{
-		var languageName = request != null ? request.LanguageName : "";
-		var moodType = request != null ? request.MoodType : "";
-		var response = GetMood(languageName, moodType);
-
-		response.TenseList.ForEach(t => t.IsChecked = request.TenseList.Any(x => x.Name == t.Name && x.IsChecked));
-		response.PersonList.ForEach(p => p.IsChecked = request.PersonList.Any(x => x.Name == p.Name && x.IsChecked));
-
-		return response;
-	}
-
 	//POST (save)
 	public async Task SaveMood(MoodSettingRequestModel request)
 	{
@@ -156,7 +130,7 @@ public class MoodSettingService : IMoodSettingService
 				Oid = Guid.NewGuid(),
 				Type = moodType,
 				LinkLanguage = language.Oid,
-				SortOrder = _mood.GetAll().OrderByDescending(m => m.SortOrder).FirstOrDefault(m => m.LinkLanguage == language.Oid).SortOrder + 1
+				SortOrder = GetMoodSortOrder(language)
 			};
 			await _mood.AddAsync(mood);
 		}
@@ -194,23 +168,12 @@ public class MoodSettingService : IMoodSettingService
 			await _midMoodTense.AddAsync(midMoodTense);
 		}
 
-		Dictionary<string, string> personType = new()
-		{
-			["1s"] = "Singular first person",
-			["2s"] = "Singular second person",
-			["3s"] = "Singular third person",
-			["1p"] = "Plural first person",
-			["2p"] = "Plural second person",
-			["3p"] = "Plural third person",
-			["2f"] = "Formal second person"
-		};
-
-		var personCode = personType.ToDictionary(x => x.Value, x => x.Key);
+		var personCode = GetPersonType().ToDictionary(x => x.Value, x => x.Key);
 		var selectedPersonCodes = personList.Where(x => x.IsChecked)
 											.Select(x => personCode[x.Name])
 											.ToHashSet();
 		var selectedPersons = _verbPerson.GetAll()
-										 .Where(p => selectedPersonCodes.Contains(p.Type))
+										 .Where(p => selectedPersonCodes.Contains(p.Type) && p.Language.Name == languageName)
 										 .ToList();
 
 		foreach (var person in selectedPersons)
@@ -228,6 +191,32 @@ public class MoodSettingService : IMoodSettingService
 		}
 
 		_unitOfWork.Save();
+
+		int GetMoodSortOrder(Language language)
+		{
+			if (_mood.GetAll().ToList().Any(m => m.LinkLanguage == language.Oid))
+			{
+				return _mood.GetAll().ToList().OrderByDescending(m => m.SortOrder).FirstOrDefault(m => m.LinkLanguage == language.Oid).SortOrder + 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
 	}
 	//+<<20260120
+
+	public Dictionary<string, string> GetPersonType()
+	{
+		return new()
+		{
+			["1s"] = "Singular first person",
+			["2s"] = "Singular second person",
+			["3s"] = "Singular third person",
+			["1p"] = "Plural first person",
+			["2p"] = "Plural second person",
+			["3p"] = "Plural third person",
+			["2f"] = "Formal second person"
+		};
+	}
 }

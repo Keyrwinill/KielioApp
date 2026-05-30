@@ -45,9 +45,10 @@ public class VerbRepository : IVerbRepository
 	}
 	//+<<20260109
 	//+>>20260126
-	public void RemoveConjugation(Verb verb)
+	public void RemoveConjugation(Verb verb, Mood mood, Tense tense)
 	{
-		var conjugations = _context.Conjugations.Where(c => c.Verb == verb).ToList();
+		var midMoodTense = _context.MidMoodTenses.FirstOrDefault(mmt => mmt.LinkMood == mood.Oid && mmt.LinkTense == tense.Oid);
+		var conjugations = _context.Conjugations.Where(c => c.LinkVerb == verb.Oid && c.LinkMidMoodTense == midMoodTense.Oid).ToList();
 		foreach (var conj in conjugations)
 		{
 			_context.Conjugations.Remove(conj);

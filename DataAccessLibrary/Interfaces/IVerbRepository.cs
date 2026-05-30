@@ -21,7 +21,7 @@ public interface IVerbRepository
 	Task AddAsync(Verb verb);
 	Task AddRangeAsync(IEnumerable<Verb> verbs);
 	//+<<20260109
-	void RemoveConjugation(Verb verb);        //+20260126
+	void RemoveConjugation(Verb verb, Mood mood, Tense tense);        //+20260126
 }
 public interface ITenseRepository
 {

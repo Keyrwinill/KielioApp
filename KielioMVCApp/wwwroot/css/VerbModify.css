@@ -1,2 +1,13 @@
-﻿body {
+﻿/*
+    Update date			Description 
+	--------------------------------
+    20260531        Initial
+*/
+#labelVerb, #labelMood, #labelTense, .personLabel {
+    width: 70px;
+    height: 40px;
+}
+
+.verbInput, .cbSet, .personInput {
+    width: 200px;
 }

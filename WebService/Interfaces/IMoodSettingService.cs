@@ -13,7 +13,6 @@ public interface IMoodSettingService
 {
 	MoodSettingResponseModel GetMood(string languageName, string moodType);
 	//+>>20260120
-	MoodSettingResponseModel RebuildResponse(MoodSettingRequestModel request);
 	Task SaveMood(MoodSettingRequestModel request);
 	//+<<20260120
 }

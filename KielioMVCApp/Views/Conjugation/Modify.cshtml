@@ -3,29 +3,50 @@
 	--------------------------------
     20260328            Initial
 *@
-
+@model ConjugationModel
 @{
-	var verbData = Model;
+    var verbData = Model;
+    var mode = ViewBag.Mode as string ?? "";
+    var saveCode = ViewBag.SaveCode as string ?? "";
+    var saveMessage = ViewBag.SaveMessage as string ?? "";
+
+    var saveMessageType = saveCode switch
+    {
+        "succeed" => "alert alert-success py-1 px-2 mb-2 small",
+        "error" => "alert alert-danger py-1 px-2 mb-2 small",
+        _ => ""
+    };
 }
 
 <h2>Modify Conjugation</h2>
+<hr />
+
 <form asp-controller="Conjugation"
       asp-action="Modify"
       id="formVerbModify"
       method="get">
+    <div class="alert alert-warning py-1 px-2 mb-2 small">
+        Please save each time when finish setting forms of a mood and a tense
+    </div>
+    @if (saveCode != "")
+    {
+        <div id="divSaveMessage"
+             class="@saveMessageType">
+            @saveMessage
+        </div>
+    }
     <div>
         <label id="labelVerb">Verb</label>
         <input class="verbInput"
                id="inputVerb"
-               type="text"
-               name="verb" />
+               type="text" />
         <br />
         <!--Mood-->
         <label id="labelMood">Mood</label>
         <select id="cbMood"
-                name="mood">
-                <option value="">--Choose a mood--</option>
-            @foreach (var mood in Model.MoodList)
+                class="cbSet">
+            <option value="">--Choose a mood--</option>
+            @foreach (var mood in verbData.MoodList)
             {
                 <option value="@mood">@mood</option>
             }
@@ -34,21 +55,52 @@
         <!--Tense-->
         <label id="labelTense">Tense</label>
         <select id="cbTense"
-                name="tense">
+                class="cbSet">
             <option value="">--Choose a tense--</option>
-        </select>
-
-        <div id="divPerson"></div>
+            <!-- Tense items. Initially have items only for modify mode -->
+            @foreach (var tense in verbData.TenseList)
+            {
+                <option value="@tense">@tense</option>
+            }
+        </select>      
     </div>
 </form>
 <form asp-controller="Conjugation"
       asp-action="SaveVerb"
       id="formVerbSave"
       method="post">
-    <button type="submit"
+    <input type="hidden" name="mode" id="hdMode" value="@mode" />
+    <input type="hidden" name="languageName" id="hdLanguage" value="@(verbData.Language ?? "")" />
+    <input type="hidden" name="Infinitive" id="hdInfinitive" value="@(verbData.Infinitive ?? "")"/>
+	<input type="hidden" name="Mood" id="hdMood" value="@(verbData.Mood ?? "")" />
+	<input type="hidden" name="Tense" id="hdTense" value="@(verbData.Tense ?? "")" />
+    <div id="divPerson">
+        <!-- All forms will be intially shown for modify mode -->
+        @foreach (var items in verbData.Forms)
+        {
+            <label class="personLabel" 
+                   data-key="@items.Value" 
+                   id="label_@items.Key">
+                   @items.Key
+            </label>
+            <input type="text" 
+                   class="personInput" 
+                   data-key="@items.Value" 
+                   id="input_@items.Value"
+                   name="Forms[@items.Key]"
+                   value="@items.Value" />
+            <br />
+        }
+    </div>
+    <button type="button"
             class="btn btn-primary"
             id="btnSave">
         Save
+    </button>
+    <button type="button"
+            class="btn btn-primary"
+            id="btnLeave">
+        Leave
     </button>
 </form>
 
@@ -62,25 +114,38 @@
         const verbInput = document.getElementById("inputVerb");
         const cbMood = document.getElementById("cbMood");
         const cbTense = document.getElementById("cbTense");
+        const btnSave = document.getElementById("btnSave");
+        const btnLeave = document.getElementById("btnLeave");
+		const hdInfinitive = document.getElementById("hdInfinitive");
+		const hdMood = document.getElementById("hdMood");
+		const hdTense = document.getElementById("hdTense");
+        const formVerbSave = document.getElementById("formVerbSave");
 
+        //Initial state for modify
+		const mode = "@mode";
         const verb = "@(verbData?.Infinitive ?? "")";
 
-        if (verb) {
-            verbInput.value = verb;
-            verbInput.textContent = verb;
+        if (mode == "modify") {
             verbInput.disabled = true;
+            cbMood.disabled = true;
+			cbTense.disabled = true;
+            verbInput.value = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(verbData.Infinitive));      //prevent special alphabet appears
+            cbMood.value = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(verbData.Mood));               //prevent special alphabet appears
+            cbTense.value = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(verbData.Tense));             //prevent special alphabet appears
 		}
         else {
-            verbInput.value = "";
-			verbInput.textContent = "";
 			verbInput.disabled = false;
+            cbMood.disabled = false;
+            cbTense.disabled = false;
         }
 
+		// Enable to change mood and tense when create
         cbMood.addEventListener("change", function() {
             const mood = this.value;
+			hdMood.value = mood;
             console.log("mood: " + mood);
 
-			// Refresh the tense dropdown based on the selected mood
+            // Refresh the tense dropdown based on the selected mood (for create mode)
             //fetch(`@Url.Action("GetTenseListByMood", "Conjugation", new { mood = "mood" })?mood=${mood}`.replace("mood", mood))
             fetch(`@Url.Action("GetTenseListByMood", "Conjugation")?mood=${encodeURIComponent(mood)}`)
                 .then(response => response.json())
@@ -95,8 +160,8 @@
                     });
                 })
                 .catch(error => console.error("Error fetching tenses:", error));
-            
-			// Display the person fields based on the selected mood
+
+            // Display the person fields based on the selected mood (for create mode)
             fetch(`@Url.Action("GetPersonList", "Conjugation")?mood=${encodeURIComponent(mood)}`)
 				.then(response => response.json())
                 .then(data => {
@@ -105,7 +170,7 @@
                     let htmlPerson = "";
                     Object.entries(data).forEach(([key, value]) => {
                         htmlPerson += `
-                            <label class="personLabel" data-key="${value}" id="label${key}">${value}</label>
+                            <label class="personLabel" data-key="${value}" id="label_${key}">${value}</label>
                             <input type="text" class="personInput" data-key="${value}" id="input_${key}" />
                             <br />
                         `;
@@ -115,12 +180,14 @@
                 })
         })
 
+        // Enable to change mood and tense when create
         cbTense.addEventListener("change", function() {
             const verb = verbInput.value.trim();
             const mood = cbMood.value;
             const tense = this.value;
+			hdTense.value = tense;
 
-			// Set values for person fields based on the selected tense
+            // Set values for person fields based on the selected tense (for create mode)
 			const inputs = document.querySelectorAll(".personInput");
 
             fetch(`@Url.Action("GetVerbForms", "Conjugation")?verb=${encodeURIComponent(verb)}&&mood=${encodeURIComponent(mood)}&&tense=${encodeURIComponent(tense)}`)
@@ -128,9 +195,20 @@
                 .then(data => {
                     inputs.forEach(input => {
                         const key = input.dataset.key;
-                        input.value = data[key];
+                        input.value = data[key] ?? "";
+                        input.name = `Forms[${key}]`;
 					});
                 })
+        });
+
+        btnSave.addEventListener("click", function() {
+            const input = verbInput.value.trim();
+            hdInfinitive.value = input;
+            formVerbSave.submit();
+        });
+
+        btnLeave.addEventListener("click", function() {
+            location.href = '@Html.Raw(Url.Action("GetConjugation", "Conjugation", new { languageName = verbData?.Language ?? "" }))';
         });
     </script>
 }

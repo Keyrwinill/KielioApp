@@ -3,9 +3,9 @@
 	--------------------------------
 	20260317			Initial
 */
-using DataAccessLibrary.Entities;
 using Microsoft.AspNetCore.Mvc;
 using ViewModel.Models.NeutralModels;
+using ViewModel.Models.ResponseModels;
 using WebService.Interfaces;
 
 namespace KielioMVCApp.Controllers
@@ -23,31 +23,78 @@ namespace KielioMVCApp.Controllers
 		[Route("/Language/{languageName}/Conjugation")]
 		public IActionResult GetConjugation(string? languageName, string? verb, string? mood = "", string? tense = "")
 		{
-			ViewBag.Title = $"{languageName} Verb";
-			ViewBag.LanguageName = languageName;
+			try
+			{
+				ViewBag.Title = $"{languageName} Verb";
+				ViewBag.LanguageName = languageName;
 
-			var response = FetchData(languageName, verb, mood, tense);
-			return View("Index", response);
+				var data = FetchData(languageName, verb, mood, tense);
+				var response = new ResponseModel<ConjugationModel>
+				{
+					Success = true,
+					ErrorCode = "0000",
+					Message = "",
+					Data = data
+				};
+				return View("Index", response);
+			}
+			catch (HttpRequestException)
+			{
+				var response = new ResponseModel<ConjugationModel>
+				{
+					Success = false,
+					ErrorCode = "9998",
+					Message = "Cannot reach the server."
+				};
+				return View("Index", response);
+			}
+			catch (Exception ex)
+			{
+				var response = new ResponseModel<ConjugationModel>
+				{
+					Success = false,
+					ErrorCode = "9999",
+					Message = $"An unexpected error occurred. {ex.Message}"
+				};
+				return View("Index", response);
+			}
 		}
 
 		[HttpGet]
 		[Route("/Language/{languageName}/Conjugation/Modify")]
-		public IActionResult Modify(string? mode, string? languageName, string? verb = "")
+		public IActionResult Modify(string mode, 
+									string languageName, 
+									string verb = "",
+									string mood = "",
+									string tense = "",
+									string saveCode = "", 
+									string saveMessage = "")
 		{
-			//var response = FetchData(languageName, verb, mood, tense);
-			var languageNameEng = languageName?.ToLower() switch
+			ViewBag.Mode = mode;
+			ViewBag.SaveCode = saveCode;
+			ViewBag.SaveMessage = saveMessage;
+
+			if (mode == "modify")
 			{
-				"deutsch" => "German",
-				"français" => "French",
-				_ => languageName
-			};
-			var response = new 
-			{ 
-				Mode = mode,
-				Infinitive = verb,
-				MoodList = _conjugationService.GetMoodList(languageNameEng)
-			};
-			return View("Modify", response);
+				return View("Modify", FetchData(languageName, verb, mood, tense));
+			}
+			else
+			{
+				return View("Modify", new ConjugationModel
+				{
+					Language = languageName,
+					MoodList = string.IsNullOrEmpty(languageName) ? new List<string>() : _conjugationService.GetMoodList(languageName),
+					TenseList = new List<string>(),
+					Infinitive = "",
+					Translation = "",                                   //keep it for future design
+					PastParticiple = "",                                //keep it for future design
+					Reflexive = false,                                  //keep it for future design
+					Separable = false,                                  //keep it for future design
+					Mood = mood,                                        //chosen mood
+					Tense = tense,                                      //chosen tense
+					Forms = new Dictionary<string, string>()
+				});
+			}
 		}
 
 		[HttpGet]
@@ -65,56 +112,70 @@ namespace KielioMVCApp.Controllers
 		}
 
 		[HttpGet]
+		public IActionResult CheckVerb(string languageName, string verb)
+		{
+			bool exists = _conjugationService.Exists(languageName, verb);
+
+			return Json(new
+			{
+				ErrorCode = exists ? "0000" : "0001",           //0000 => success; 0001 => not exists
+				Message = exists ? "" : "Verb not found.",
+				Language = languageName
+			});
+		}
+
+		[HttpGet]
 		public IActionResult GetVerbForms(string verb, string mood, string tense)
 		{
 			var verbForms = _conjugationService.GetFormByTense(verb, mood, tense);
 			return Json(verbForms);
 		}
 
-		public ConjugationModel FetchData(string? languageName, string? verb = "", string? mood = "", string? tense = "")
+		public ConjugationModel? FetchData(string? languageName, string? verb = "", string? mood = "", string? tense = "")
 		{
-			var response = new ConjugationModel();
-			var languageNameEng = languageName?.ToLower() switch
-			{
-				"deutsch" => "German",
-				"français" => "French",
-				_ => languageName
-			};
-
-			if (string.IsNullOrEmpty(verb))
-			{
-				response = new ConjugationModel
-				{
-					Language = languageNameEng,
-					MoodList = _conjugationService.GetMoodList(languageNameEng),
-					Infinitive = "",
-					Translation = "",
-					PastParticiple = "",
-					Reflexive = false,
-					Separable = false,
-					Mood = mood,
-					Tense = tense,
-					Forms = new Dictionary<string, string>()
-				};
-			}
-			else
-			{
-				response = _conjugationService.GetConjugation(languageNameEng, verb, mood, tense);
-			}
-			return response;
+			return _conjugationService.GetConjugation(languageName, verb, mood, tense);
 		}
 
 		[HttpPost]
-		[Route("/Language/Deutsch/Conjugation")]
-		public async Task<IActionResult> SaveVerb(ConjugationModel request)
+		[Route("/Language/Conjugation")]
+		public async Task<IActionResult> SaveVerb(ConjugationModel request, string languageName, string mode)
 		{
-			if (request == null)
+			try
 			{
-				return BadRequest("Invalid request.");
-			}
+				if (request == null)
+				{
+					// Go to create mode when there's error
+					return RedirectToAction(nameof(Modify), new 
+					{ 
+						mode = "create",
+						languageName = languageName,
+						saveCode = "error",
+						saveMessage = "Invalid request!" 
+					});
+				}
 
-			await _conjugationService.SaveVerb(request);
-			return RedirectToAction(nameof(Index));
+				await _conjugationService.SaveVerb(request, languageName);
+				return RedirectToAction(nameof(Modify), new
+				{ 
+					mode = mode, 
+					languageName = languageName,
+					verb = request.Infinitive,
+					mood = request.Mood,
+					tense = request.Tense,
+					saveCode = "succeed", 
+					saveMessage = "Saving process is finished!" 
+				});
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction(nameof(Modify), new 
+				{ 
+					mode = "create", 
+					languageName = languageName, 
+					saveCode = "error", 
+					saveMessage = $"An unexpected error occurred. {ex.Message}" 
+				});
+			}
 		}
 	}
 }

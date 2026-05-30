@@ -35,7 +35,7 @@ namespace KielioMVCApp.Controllers
 		{
 			//+>>20260121
 			await _moodSettingService.SaveMood(request);
-			return RedirectToAction(nameof(Index));     // Redirect to GET method without parameters to reset the form
+			return RedirectToAction(nameof(GetMood));     // Redirect to GET method without parameters to reset the form
 			//+<<20260121
 		}
 	}
