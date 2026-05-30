@@ -49,7 +49,7 @@ In every language, verb forms are changing based on moods, tenses, and, persons.
 A verb has different form based on the mood, the tense, and the person. The relation between mood, tense, and person is defined in the function "Mood Setting".
 In this funtion, users can search the verb from by entering a verb, choosing a mood and a tense, a table of each form by person is displayed when clicking on the "Search" button.
 ![Deutsch Verb](Screenshots/DeutschVerbSearch_20260531.png "Deutsch Verb")
-![Français Verb](Screenshots/FrançaisVerbSearch_20260531.png "Français Verb")
+![Français Verb](Screenshots/FrancaisVerbSearch_20260531.png "Français Verb")
 
 While clicking on Create and Modify button, it goes to the page where can edit conjugation.
 ![Edit Conjugation](Screenshots/VerbEdit_20260531.png "Edit Conjugation")
