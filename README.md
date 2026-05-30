@@ -37,13 +37,13 @@ HTTP Request -> Controller -> Service -> Repository -> DbContext
 #### 1.1. Deutsch Adjective
 To show suffixes of Gernman Adjectives and Articles by choosing a type before adjectives, then tables are displayed under the type condition, that shows the suffixes changes by cases and single/plural.  
 ##### 1.1.1. Choose type (All / Definite Article / Indefinite Article / No Article / Gentitive), then display tables that shows each German adjective suffix by genders and cases.  
-![Deutsch Adjective](Screenshots/DeutschAdjective_20260118.png "Deutsch Adjective")
+![Deutsch Adjective](Screenshots/DeutschAdjective_20260318.png "Deutsch Adjective")
    
 #### 1.2. Mood Setting      
 In every language, verb forms are changing based on moods, tenses, and, persons. This function shows moods and applicable tenses and persons of each language.  
 ##### 1.2.1. Choose a language => It will bring out moods, tenses, persons of the language. Create button is enable, that is to add more moods and sebsequently set the applicable tenses and persons.  
 ##### 1.2.2. Choose a Mood => It will bring out the applicable tense and person. Modify button is enable, that is to change the setting of applicable tenses and persons.
-![Mood Setting](Screenshots/MoodSetting_20260118.png "Mood Setting")
+![Mood Setting](Screenshots/MoodSetting_20260318.png "Mood Setting")
 
 #### 1.3. Deutsch Verb/Français Verb
 A verb has different form based on the mood, the tense, and the person. The relation between mood, tense, and person is defined in the function "Mood Setting".
